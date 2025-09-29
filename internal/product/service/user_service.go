@@ -1,0 +1,66 @@
+package service
+
+import (
+	"errors"
+	"server/internal/product/model"
+	"server/internal/product/repository"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
+)
+
+type UserService struct {
+	uRepo repository.UserRepository
+}
+
+func NewUserService(repository repository.UserRepository) *UserService {
+	return &UserService{uRepo: repository}
+}
+
+var jwtSecret = []byte("gee")
+
+type Claims struct {
+	UserID  int    `json:"user_id"`
+	Account string `json:"account"`
+	jwt.RegisteredClaims
+}
+
+func (s *UserService) Login(account, password string) (string, error) {
+	user, err := s.uRepo.FindUserByAccount(account)
+	if err != nil {
+		return "", errors.New("invalid account or password")
+	}
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)) != nil {
+		return "", errors.New("invalid account or password")
+	}
+	//对比密码
+	claims := Claims{
+		UserID:  user.Uid,
+		Account: user.Account,
+		RegisteredClaims: jwt.RegisteredClaims{
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+			Issuer:    "gee",
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims) //生成JWT_TOKEN
+	tokenString, err := token.SignedString(jwtSecret)          //签名
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
+}
+
+func (s *UserService) Register(account, password, name string) error {
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
+	if err != nil {
+		return err
+	}
+	u := model.User{Account: account, Password: string(passwordHash), Name: name, CreatedAt: time.Now()}
+	err = s.uRepo.CreateUser(&u)
+	if err != nil {
+		return err
+	}
+	return nil
+}

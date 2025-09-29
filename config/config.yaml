@@ -1,0 +1,9 @@
+server:
+  port: 10086
+
+database:
+  driver: mysql
+  dsn: gee:srnKFm3iNK3wkJ4r@tcp(43.136.47.193:23306)/gee?charset=utf8mb4&parseTime=True&loc=Local
+
+logger:
+  level: debug
