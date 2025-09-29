@@ -1,7 +1,7 @@
 # 项目结构
 
 - 仓库：server
-- 生成时间：2025-09-29 14:03:17 UTC
+- 生成时间：2025-09-29 14:03:54 UTC
 - 深度：3
 - 忽略：.git|target|node_modules|.idea|.vscode|dist|build
 
