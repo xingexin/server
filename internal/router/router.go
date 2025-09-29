@@ -15,4 +15,5 @@ func RegisterRoutes(r *gin.Engine, handler *product.Handler) {
 	v1.POST("/register", handler.Register)
 	auth := v1.Group("/")
 	auth.Use(middleware.AuthMiddleWare(secret))
+	auth.POST("/createCommodity", handler.CreateCommodity)
 }

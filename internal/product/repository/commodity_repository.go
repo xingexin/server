@@ -13,7 +13,8 @@ type CommodityWriter interface {
 }
 
 type CommodityReader interface {
-	FindCommodityByName(name string) (model.Commodity, error)
+	FindCommodityByName(name string) (*model.Commodity, error)
+	ListCommodity() ([]*model.Commodity, error)
 }
 
 type CommodityRepository interface {
@@ -44,8 +45,26 @@ func (cRepo *gormCommodityRepository) UpdateCommodity(commodity *model.Commodity
 	return err
 }
 
-func (cRepo *gormCommodityRepository) FindCommodityByName(name string) (model.Commodity, error) {
+func (cRepo *gormCommodityRepository) FindCommodityByName(name string) (*model.Commodity, error) {
 	var commodity model.Commodity
 	err := cRepo.gormDB.Where("name=?", name).Find(&commodity).Error
-	return commodity, err
+	return &commodity, err
+}
+
+func (cRepo *gormCommodityRepository) ListCommodity() ([]*model.Commodity, error) {
+	cArr := make([]*model.Commodity, 0)
+
+	row, err := cRepo.gormDB.Model(&model.Commodity{}).Rows()
+	if err != nil {
+		return nil, err
+	}
+	for row.Next() {
+		var commodity model.Commodity
+		err = cRepo.gormDB.ScanRows(row, &commodity)
+		if err != nil {
+			return nil, err
+		}
+		cArr = append(cArr, &commodity)
+	}
+	return cArr, nil
 }

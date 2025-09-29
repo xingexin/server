@@ -23,9 +23,14 @@ func main() {
 			panic(err)
 		}
 	}(sqlDB)
-	repo := repository.NewUserRepository(gormDB)
-	srvc := service.NewUserService(repo)
-	handler := product.NewHandler(srvc)
+	uRepo := repository.NewUserRepository(gormDB)
+	cRepo := repository.NewCommodityRepository(gormDB)
+
+	cSvc := service.NewCommodityService(cRepo)
+	uSvc := service.NewUserService(uRepo)
+
+	handler := product.NewHandler(uSvc, cSvc)
+
 	r := gin.Default()
 	router.RegisterRoutes(r, handler)
 	err = r.Run("localhost:8080")
