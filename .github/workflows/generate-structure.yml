@@ -23,7 +23,7 @@ jobs:
       !contains(github.event.head_commit.message, '[ci skip]')
   
     env:
-      MAX_DEPTH: "3"
+      MAX_DEPTH: "99"
       IGNORE_PATTERN: ".git|target|node_modules|.idea|.vscode|dist|build"
       SECTION_TITLE: "项目结构"
       OUTPUT_FILE: "PROJECT_STRUCTURE.md"
