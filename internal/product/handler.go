@@ -73,3 +73,23 @@ func (h *Handler) CreateCommodity(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"create": "create success"})
 	return
 }
+
+func (h *Handler) ListCommodity(c *gin.Context) {
+	commodities, err := h.cSvc.ListCommodity()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, commodities)
+}
+
+func (h *Handler) RemoveCommodity(c *gin.Context) {
+	req := &model.Commodity{}
+	err := c.ShouldBindJSON(req)
+	if err != nil {
+		println(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON"})
+		return
+	}
+	h.cSvc.RemoveCommodity()
+}

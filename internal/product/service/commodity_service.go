@@ -30,8 +30,9 @@ func (c *CommodityService) UpdateCommodity(commodity *model.Commodity) error {
 	return c.cRepo.UpdateCommodity(commodity)
 }
 
-func (c *CommodityService) FindCommodity(name string) (*model.Commodity, error) {
+func (c *CommodityService) FindCommodityByName(name string) (*model.Commodity, error) {
 	return c.cRepo.FindCommodityByName(name)
+
 }
 
 func (c *CommodityService) ListCommodity() ([]*model.Commodity, error) {

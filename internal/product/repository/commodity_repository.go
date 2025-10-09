@@ -8,6 +8,7 @@ import (
 
 type CommodityWriter interface {
 	CreateCommodity(commodity *model.Commodity) error
+
 	DeleteCommodity(id int) error
 	UpdateCommodity(commodity *model.Commodity) error
 }
@@ -53,18 +54,8 @@ func (cRepo *gormCommodityRepository) FindCommodityByName(name string) (*model.C
 
 func (cRepo *gormCommodityRepository) ListCommodity() ([]*model.Commodity, error) {
 	cArr := make([]*model.Commodity, 0)
-
-	row, err := cRepo.gormDB.Model(&model.Commodity{}).Rows()
-	if err != nil {
+	if err := cRepo.gormDB.Find(&cArr).Error; err != nil {
 		return nil, err
-	}
-	for row.Next() {
-		var commodity model.Commodity
-		err = cRepo.gormDB.ScanRows(row, &commodity)
-		if err != nil {
-			return nil, err
-		}
-		cArr = append(cArr, &commodity)
 	}
 	return cArr, nil
 }
