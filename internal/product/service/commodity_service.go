@@ -27,11 +27,18 @@ func (c *CommodityService) RemoveCommodity(id int) error {
 }
 
 func (c *CommodityService) UpdateCommodity(commodity *model.Commodity) error {
+
+	com, err := c.cRepo.FindCommodityById(commodity.Name)
+	if err != nil {
+		return err
+	}
+
+	commodity.UpdateAt = time.Now()
 	return c.cRepo.UpdateCommodity(commodity)
 }
 
 func (c *CommodityService) FindCommodity(name string) (*model.Commodity, error) {
-	return c.cRepo.FindCommodityByName(name)
+	return c.cRepo.FindCommodityById(name)
 }
 
 func (c *CommodityService) ListCommodity() ([]*model.Commodity, error) {
