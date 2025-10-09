@@ -2,19 +2,14 @@ package db
 
 import (
 	"fmt"
-	serverConfig "server/config"
+	"server/config"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-func InitDB() (*gorm.DB, error) {
-
-	cfg, err := serverConfig.LoadConfig()
-	if err != nil {
-		return nil, err
-	}
+func InitDB(cfg *config.Config) (*gorm.DB, error) {
 	var diaLector gorm.Dialector
 	switch cfg.DataBase.Driver {
 	case "mysql":

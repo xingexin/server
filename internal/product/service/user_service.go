@@ -27,6 +27,7 @@ type Claims struct {
 }
 
 func (s *UserService) Login(account, password string) (string, error) {
+
 	user, err := s.uRepo.FindUserByAccount(account)
 	if err != nil {
 		return "", errors.New("invalid account or password")
