@@ -10,22 +10,26 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// UserService 提供用户相关的业务逻辑服务
 type UserService struct {
 	uRepo repository.UserRepository
 }
 
+// NewUserService 创建一个新的用户服务实例
 func NewUserService(repository repository.UserRepository) *UserService {
 	return &UserService{uRepo: repository}
 }
 
 var jwtSecret = []byte("gee")
 
+// Claims JWT令牌的自定义声明结构
 type Claims struct {
 	UserID  int    `json:"user_id"`
 	Account string `json:"account"`
 	jwt.RegisteredClaims
 }
 
+// Login 用户登录，验证账号密码并生成JWT令牌
 func (s *UserService) Login(account, password string) (string, error) {
 
 	user, err := s.uRepo.FindUserByAccount(account)
@@ -53,6 +57,7 @@ func (s *UserService) Login(account, password string) (string, error) {
 	return tokenString, nil
 }
 
+// Register 用户注册，对密码进行加密并创建新用户
 func (s *UserService) Register(account, password, name string) error {
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
