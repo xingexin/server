@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"server/internal/product/model"
 
 	"gorm.io/gorm"
@@ -37,8 +38,11 @@ func (cRepo *gormCommodityRepository) CreateCommodity(commodity *model.Commodity
 }
 
 func (cRepo *gormCommodityRepository) DeleteCommodity(id int) error {
-	err := cRepo.gormDB.Delete(&model.User{}, id).Error
-	return err
+	err := cRepo.gormDB.Delete(&model.Commodity{}, id)
+	if err.RowsAffected == 0 {
+		return fmt.Errorf("commodity with id=%d not found", id)
+	}
+	return err.Error
 }
 
 func (cRepo *gormCommodityRepository) UpdateCommodity(commodity *model.Commodity) error {

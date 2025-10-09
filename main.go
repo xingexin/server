@@ -33,6 +33,7 @@ func main() {
 			panic(err)
 		}
 	}(sqlDB)
+
 	uRepo := repository.NewUserRepository(gormDB)
 	cRepo := repository.NewCommodityRepository(gormDB)
 

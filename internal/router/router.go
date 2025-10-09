@@ -16,4 +16,8 @@ func RegisterRoutes(r *gin.Engine, handler *product.Handler) {
 	auth := v1.Group("/")
 	auth.Use(middleware.AuthMiddleWare(secret))
 	auth.POST("/createCommodity", handler.CreateCommodity)
+	auth.POST("/updateCommodity", handler.UpdateCommodity)
+	auth.GET("/listCommodity", handler.ListCommodity)
+	auth.DELETE("/deleteCommodity", handler.DeleteCommodity)
+
 }

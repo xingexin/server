@@ -84,7 +84,17 @@ func (h *Handler) ListCommodity(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
-	c.JSON(http.StatusOK, commodities)
+	res := make([]interface{}, 0, len(commodities))
+	for _, cdt := range commodities {
+		res = append(res, gin.H{
+			"id":    cdt.ID,
+			"name":  cdt.Name,
+			"price": cdt.Price,
+			"stock": cdt.Stock,
+		})
+	}
+	c.JSON(http.StatusOK, res)
+	log.Info("user", "list commodity success")
 	return
 }
 
@@ -95,7 +105,6 @@ func (h *Handler) UpdateCommodity(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON"})
 		return
 	}
-
 	err = h.cSvc.UpdateCommodity(req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err})
@@ -117,7 +126,7 @@ func (h *Handler) DeleteCommodity(c *gin.Context) {
 	}
 	err = h.cSvc.RemoveCommodity(req.ID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"delete": "delete success"})
