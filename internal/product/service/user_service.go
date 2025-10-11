@@ -45,7 +45,7 @@ func (s *UserService) Login(account, password string) (string, error) {
 		Account: user.Account,
 		RegisteredClaims: jwt.RegisteredClaims{
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 999)),
 			Issuer:    "gee",
 		},
 	}

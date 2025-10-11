@@ -19,6 +19,7 @@ type CommodityWriter interface {
 type CommodityReader interface {
 	FindCommodityById(id int) (*model.Commodity, error)
 	ListCommodity() ([]*model.Commodity, error)
+	FindCommodityByName(name string) ([]*model.Commodity, error)
 }
 
 // CommodityRepository 商品操作的数据访问接口，组合了读写操作
@@ -62,6 +63,15 @@ func (cRepo *gormCommodityRepository) FindCommodityById(id int) (*model.Commodit
 	var commodity model.Commodity
 	err := cRepo.gormDB.Where("id=?", id).Find(&commodity).Error
 	return &commodity, err
+}
+
+func (cRepo *gormCommodityRepository) FindCommodityByName(name string) ([]*model.Commodity, error) {
+	var commodities []*model.Commodity
+	err := cRepo.gormDB.Where("name=?", name).Find(&commodities).Error
+	if err != nil {
+		return nil, err
+	}
+	return commodities, nil
 }
 
 // ListCommodity 从数据库中获取所有商品列表

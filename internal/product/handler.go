@@ -71,7 +71,7 @@ func (h *Handler) CreateCommodity(c *gin.Context) {
 	}
 	err = h.cSvc.CreateCommodity(req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"create": "create success"})
@@ -81,7 +81,7 @@ func (h *Handler) CreateCommodity(c *gin.Context) {
 func (h *Handler) ListCommodity(c *gin.Context) {
 	commodities, err := h.cSvc.ListCommodity()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	res := make([]interface{}, 0, len(commodities))
@@ -107,7 +107,7 @@ func (h *Handler) UpdateCommodity(c *gin.Context) {
 	}
 	err = h.cSvc.UpdateCommodity(req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"update": "update success"})
@@ -135,5 +135,30 @@ func (h *Handler) DeleteCommodity(c *gin.Context) {
 }
 
 func (h *Handler) FindCommodityByName(c *gin.Context) {
+	req := struct {
+		Name string `json:"name"`
+	}{}
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid JSON"})
+		return
+	}
 
+	commodities, err := h.cSvc.FindCommodityByName(req.Name)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	res := make([]interface{}, 0, len(commodities))
+	for _, cdt := range commodities {
+		res = append(res, gin.H{
+			"id":    cdt.ID,
+			"name":  cdt.Name,
+			"price": cdt.Price,
+			"stock": cdt.Stock,
+		})
+	}
+	c.JSON(http.StatusOK, res)
+	log.Info("user", "find commodity by name success:", req.Name)
+	return
 }

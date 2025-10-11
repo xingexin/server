@@ -42,9 +42,14 @@ func (c *CommodityService) UpdateCommodity(commodity *model.Commodity) error {
 	return c.cRepo.UpdateCommodity(commodity)
 }
 
-// FindCommodity 根据ID查找商品
-func (c *CommodityService) FindCommodity(id int) (*model.Commodity, error) {
+// FindCommodityById 根据ID查找商品
+func (c *CommodityService) FindCommodityById(id int) (*model.Commodity, error) {
 	return c.cRepo.FindCommodityById(id)
+}
+
+func (c *CommodityService) FindCommodityByName(name string) ([]*model.Commodity, error) {
+	return c.cRepo.FindCommodityByName(name)
+
 }
 
 // ListCommodity 获取所有商品列表

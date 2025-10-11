@@ -19,5 +19,5 @@ func RegisterRoutes(r *gin.Engine, handler *product.Handler) {
 	auth.POST("/updateCommodity", handler.UpdateCommodity)
 	auth.GET("/listCommodity", handler.ListCommodity)
 	auth.DELETE("/deleteCommodity", handler.DeleteCommodity)
-
+	auth.GET("/getCommodity", handler.FindCommodityByName)
 }
