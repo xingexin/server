@@ -61,7 +61,10 @@ func (cRepo *gormCommodityRepository) UpdateCommodity(commodity *model.Commodity
 // FindCommodityById 根据ID从数据库中查找商品
 func (cRepo *gormCommodityRepository) FindCommodityById(id int) (*model.Commodity, error) {
 	var commodity model.Commodity
-	err := cRepo.gormDB.Where("id=?", id).Find(&commodity).Error
+	err := cRepo.gormDB.First(&commodity, id).Error
+	if err != nil {
+		return nil, err
+	}
 	return &commodity, err
 }
 
