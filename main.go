@@ -3,7 +3,7 @@ package main
 import (
 	"database/sql"
 	"server/config"
-	"server/internal/product"
+	"server/internal/product/handler"
 	"server/internal/product/repository"
 	"server/internal/product/service"
 	"server/internal/router"
@@ -46,7 +46,8 @@ func main() {
 	cSvc := service.NewCommodityService(cRepo)
 	uSvc := service.NewUserService(uRepo)
 
-	handler := product.NewHandler(uSvc, cSvc)
+	userHandler := handler.NewUserHandler(uSvc)
+	commodityHandler := handler.NewCommodityHandler(cSvc)
 
 	r := gin.Default()
 
@@ -65,7 +66,7 @@ func main() {
 
 	log.Info("Server is running at http://localhost:8080")
 
-	router.RegisterRoutes(r, handler)
+	router.RegisterRoutes(r, userHandler, commodityHandler)
 	err = r.Run("localhost:" + strconv.Itoa(cfg.Server.Port))
 	if err != nil {
 		panic(err)
