@@ -9,7 +9,7 @@ import (
 
 var secret = []byte("gee")
 
-func RegisterRoutes(r *gin.Engine, userHandler *handler.UserHandler, commodityHandler *handler.CommodityHandler) {
+func RegisterRoutes(r *gin.Engine, userHandler *handler.UserHandler, commodityHandler *handler.CommodityHandler, cartHandler *handler.CartHandler) {
 	v1 := r.Group("/v1")
 	v1.POST("/login", userHandler.Login)
 	v1.POST("/register", userHandler.Register)
@@ -20,4 +20,5 @@ func RegisterRoutes(r *gin.Engine, userHandler *handler.UserHandler, commodityHa
 	auth.GET("/listCommodity", commodityHandler.ListCommodity)
 	auth.DELETE("/deleteCommodity", commodityHandler.DeleteCommodity)
 	auth.GET("/getCommodity", commodityHandler.FindCommodityByName)
+	auth.POST("/addToCart", cartHandler.AddToCart)
 }

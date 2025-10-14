@@ -10,6 +10,7 @@ import (
 
 type CartHandler struct {
 	cartService *service.CartService
+	userService *service.UserService
 }
 
 type reqAdd struct {
@@ -18,8 +19,8 @@ type reqAdd struct {
 	Quantity    int `json:"quantity"`
 }
 
-func NewCartHandler(cartService *service.CartService) *CartHandler {
-	return &CartHandler{cartService: cartService}
+func NewCartHandler(cartService *service.CartService, userService *service.UserService) *CartHandler {
+	return &CartHandler{cartService: cartService, userService: userService}
 }
 
 func (h *CartHandler) AddToCart(c *gin.Context) {
@@ -36,5 +37,4 @@ func (h *CartHandler) AddToCart(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"success": "add success"})
 	log.Info("user", req.UserId, "add to cart success")
-
 }

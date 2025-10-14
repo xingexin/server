@@ -4,73 +4,57 @@ import (
 	"database/sql"
 	"server/config"
 	"server/internal/product/handler"
-	"server/internal/product/repository"
-	"server/internal/product/service"
 	"server/internal/router"
-	"server/pkg/db"
+	"server/pkg/container"
 	"server/pkg/logger"
 	"strconv"
-	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 func main() {
-	cfg, err := config.LoadConfig()
-	if err != nil {
-		panic(err)
-	}
-	logger.InitLogger(cfg.Logger.Level)
+	// 创建 dig 容器
+	c := container.BuildContainer()
 
-	gormDB, err := db.InitDB(cfg)
-	if err != nil {
-		panic(err)
-	}
+	// 使用 Invoke 来运行应用，dig 会自动解析所有依赖
+	err := c.Invoke(func(
+		cfg *config.Config,
+		gormDB *gorm.DB,
+		r *gin.Engine,
+		userHandler *handler.UserHandler,
+		commodityHandler *handler.CommodityHandler,
+		cartHandler *handler.CartHandler,
+	) error {
+		// 初始化日志
+		logger.InitLogger(cfg.Logger.Level)
 
-	sqlDB, err := gormDB.DB()
-	if err != nil {
-		panic(err)
-	}
-	defer func(sqlDB *sql.DB) {
-		err = sqlDB.Close()
+		// 获取 SQL DB 用于资源清理
+		sqlDB, err := gormDB.DB()
 		if err != nil {
-			panic(err)
+			return err
 		}
-	}(sqlDB)
+		defer func(sqlDB *sql.DB) {
+			err = sqlDB.Close()
+			if err != nil {
+				log.Error("Failed to close database:", err)
+			}
+		}(sqlDB)
 
-	uRepo := repository.NewUserRepository(gormDB)
-	cRepo := repository.NewCommodityRepository(gormDB)
+		r.Use(gin.LoggerWithWriter(log.StandardLogger().Out))
+		r.Use(gin.Recovery())
 
-	cSvc := service.NewCommodityService(cRepo)
-	uSvc := service.NewUserService(uRepo)
+		// 注册路由
+		router.RegisterRoutes(r, userHandler, commodityHandler, cartHandler)
 
-	userHandler := handler.NewUserHandler(uSvc)
-	commodityHandler := handler.NewCommodityHandler(cSvc)
+		log.Info("Server is running at http://localhost:8080")
 
-	r := gin.Default()
+		// 启动服务器
+		return r.Run("localhost:" + strconv.Itoa(cfg.Server.Port))
+	})
 
-	// 配置 CORS 中间件
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:5173"}, // 允许的前端地址
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge:           12 * time.Hour,
-	}))
-
-	r.Use(gin.LoggerWithWriter(log.StandardLogger().Out))
-	r.Use(gin.Recovery())
-
-	log.Info("Server is running at http://localhost:8080")
-
-	router.RegisterRoutes(r, userHandler, commodityHandler)
-	err = r.Run("localhost:" + strconv.Itoa(cfg.Server.Port))
 	if err != nil {
 		panic(err)
 	}
-
-	return
 }
