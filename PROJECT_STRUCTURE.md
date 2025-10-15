@@ -1,7 +1,7 @@
 # 项目结构
 
 - 仓库：server
-- 生成时间：2025-10-15 07:04:24 UTC
+- 生成时间：2025-10-15 07:54:58 UTC
 - 深度：99
 - 忽略：.git|target|node_modules|.idea|.vscode|dist|build
 
@@ -11,6 +11,7 @@
 │   └── workflows/
 │       └── generate-structure.yml
 ├── .gitignore
+├── DESIGN.md
 ├── PROJECT_STRUCTURE.md
 ├── Readme.md
 ├── config/
@@ -56,7 +57,7 @@
         ├── code.go
         └── response.go
 
-17 directories, 32 files
+17 directories, 33 files
 ```
 
 > 本文件由 GitHub Actions 自动生成，请勿手动编辑。
