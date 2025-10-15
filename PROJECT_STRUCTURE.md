@@ -1,7 +1,7 @@
 # 项目结构
 
 - 仓库：server
-- 生成时间：2025-10-11 05:45:09 UTC
+- 生成时间：2025-10-14 14:39:00 UTC
 - 深度：99
 - 忽略：.git|target|node_modules|.idea|.vscode|dist|build
 
@@ -22,11 +22,14 @@
 │   ├── middleware/
 │   │   └── auth.go
 │   ├── product/
-│   │   ├── handler.go
+│   │   ├── handler/
+│   │   │   ├── commodity_handler.go
+│   │   │   └── user_handler.go
 │   │   ├── model/
 │   │   │   ├── commodity_model.go
 │   │   │   └── user_model.go
 │   │   ├── repository/
+│   │   │   ├── cart_repository.go
 │   │   │   ├── commodity_repository.go
 │   │   │   └── user_repository.go
 │   │   └── service/
@@ -38,10 +41,13 @@
 └── pkg/
     ├── db/
     │   └── dataBase.go
-    └── logger/
-        └── logger.go
+    ├── logger/
+    │   └── logger.go
+    └── response/
+        ├── code.go
+        └── response.go
 
-14 directories, 20 files
+16 directories, 24 files
 ```
 
 > 本文件由 GitHub Actions 自动生成，请勿手动编辑。
