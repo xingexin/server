@@ -1,0 +1,70 @@
+package handler
+
+import (
+	"server/internal/product/service"
+	"server/pkg/response"
+
+	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
+)
+
+type OrderHandler struct {
+	oSvc *service.OrderService
+}
+
+func NewOrderHandler(oSvc *service.OrderService) *OrderHandler {
+	return &OrderHandler{oSvc: oSvc}
+}
+
+type reqCreateOrder struct {
+	UserId      int     `json:"userId"`
+	CommodityId int     `json:"commodityId"`
+	Quantity    int     `json:"quantity"`
+	TotalPrice  float64 `json:"totalPrice"`
+	Address     string  `json:"address"`
+}
+
+type reqUpdateOrder struct {
+	Status  string `json:"status"`
+	Address string `json:"address"`
+}
+
+func (h *OrderHandler) CreateOrder(c *gin.Context) {
+	req := &reqCreateOrder{}
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
+		return
+	}
+	err = h.oSvc.CreateOrder(req.UserId, req.CommodityId, req.Quantity, req.TotalPrice, req.Address)
+	if err != nil {
+		response.InternalServerError(c, response.CodeInternalError, "server busy")
+		return
+	}
+	response.Success(c, nil)
+	log.Info("order create success:", req.UserId, req.CommodityId)
+}
+
+func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
+	req := reqUpdateOrder{}
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
+		return
+	}
+	if req.Status != "" {
+		err = h.oSvc.UpdateOrderStatus(req.Status)
+		if err != nil {
+			response.InternalServerError(c, response.CodeInternalError, "server busy")
+		}
+	}
+	if req.Address != "" {
+		err = h.oSvc.UpdateOrderAddress(req.Address)
+		if err != nil {
+			response.InternalServerError(c, response.CodeInternalError, "server busy")
+		}
+	}
+	response.Success(c, nil)
+	log.Info("order update success:", req.Status, req.Address)
+	return
+}

@@ -2,8 +2,8 @@
 package middleware
 
 import (
-	"net/http"
 	"server/internal/product/service"
+	"server/pkg/response"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +20,7 @@ func AuthMiddleWare(secret []byte) gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 		// 检查Authorization头是否为空或不以"Bearer "开头
 		if authHeader == "" || !strings.HasPrefix(authHeader, "Bearer ") {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid Authorization"})
+			response.Unauthorized(c, response.CodeTokenInvalid, "invalid Authorization")
 			c.Abort()
 			return
 		}
@@ -36,7 +36,7 @@ func AuthMiddleWare(secret []byte) gin.HandlerFunc {
 		})
 		// 检查token解析是否出错
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid Authorization"})
+			response.Unauthorized(c, response.CodeTokenInvalid, "invalid Authorization")
 			// 终止后续中间件和处理函数的执行
 			c.Abort()
 			return
