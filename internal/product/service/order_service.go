@@ -19,13 +19,13 @@ func (os *OrderService) CreateOrder(userId int, commodityId int, quantity int, t
 	return os.oRepo.CreateOrder(order)
 }
 
-func (os *OrderService) UpdateOrderStatus(status string) error {
-	order := &model.Order{Status: status}
+func (os *OrderService) UpdateOrderStatus(id int, status string) error {
+	order := &model.Order{Status: status, Id: id}
 	return os.oRepo.UpdateOrder(order)
 }
 
-func (os *OrderService) UpdateOrderAddress(address string) error {
-	order := &model.Order{Address: address}
+func (os *OrderService) UpdateOrderAddress(id int, address string) error {
+	order := &model.Order{Address: address, Id: id}
 	return os.oRepo.UpdateOrder(order)
 }
 

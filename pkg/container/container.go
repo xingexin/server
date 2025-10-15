@@ -28,16 +28,19 @@ func BuildContainer() *dig.Container {
 	container.Provide(repository.NewUserRepository)
 	container.Provide(repository.NewCommodityRepository)
 	container.Provide(repository.NewCartRepository)
+	container.Provide(repository.NewOrderRepository)
 
 	// 提供 Services
 	container.Provide(service.NewUserService)
 	container.Provide(service.NewCommodityService)
 	container.Provide(service.NewCartService)
+	container.Provide(service.NewOrderService)
 
 	// 提供 Handlers
 	container.Provide(handler.NewUserHandler)
 	container.Provide(handler.NewCommodityHandler)
 	container.Provide(handler.NewCartHandler)
+	container.Provide(handler.NewOrderHandler)
 
 	// 提供 Gin Engine
 	container.Provide(gin.Default)

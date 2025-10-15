@@ -25,8 +25,17 @@ type reqCreateOrder struct {
 }
 
 type reqUpdateOrder struct {
+	Id      int    `json:"id"`
 	Status  string `json:"status"`
 	Address string `json:"address"`
+}
+
+type reqDeleteOrder struct {
+	Id int `json:"id"`
+}
+
+type reqGetOrder struct {
+	Id int `json:"id"`
 }
 
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
@@ -53,18 +62,54 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 		return
 	}
 	if req.Status != "" {
-		err = h.oSvc.UpdateOrderStatus(req.Status)
+		err = h.oSvc.UpdateOrderStatus(req.Id, req.Status)
 		if err != nil {
 			response.InternalServerError(c, response.CodeInternalError, "server busy")
+			return
 		}
 	}
 	if req.Address != "" {
-		err = h.oSvc.UpdateOrderAddress(req.Address)
+		err = h.oSvc.UpdateOrderAddress(req.Id, req.Address)
 		if err != nil {
 			response.InternalServerError(c, response.CodeInternalError, "server busy")
+			return
 		}
 	}
 	response.Success(c, nil)
 	log.Info("order update success:", req.Status, req.Address)
+	return
+}
+
+func (h *OrderHandler) DeleteOrder(c *gin.Context) {
+	req := reqDeleteOrder{}
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		response.BadRequest(c, response.CodeInvalidParams, "invalid JSON")
+		return
+	}
+	err = h.oSvc.DeleteOrder(req.Id)
+	if err != nil {
+		response.InternalServerError(c, response.CodeInternalError, "server busy")
+		return
+	}
+	response.SuccessWithMessage(c, "delete success", nil)
+	log.Info("order delete success:", req.Id)
+	return
+}
+
+func (h *OrderHandler) GetOrder(c *gin.Context) {
+	req := reqGetOrder{}
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
+		return
+	}
+	order, err := h.oSvc.GetOrderById(req.Id)
+	if err != nil {
+		response.InternalServerError(c, response.CodeInternalError, "server busy")
+		return
+	}
+	response.Success(c, gin.H{"order": order})
+	log.Info("order get success:", req.Id)
 	return
 }

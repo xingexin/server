@@ -26,6 +26,7 @@ func main() {
 		userHandler *handler.UserHandler,
 		commodityHandler *handler.CommodityHandler,
 		cartHandler *handler.CartHandler,
+		orderHandler *handler.OrderHandler,
 	) error {
 		// 初始化日志
 		logger.InitLogger(cfg.Logger.Level)
@@ -46,7 +47,7 @@ func main() {
 		r.Use(gin.Recovery())
 
 		// 注册路由
-		router.RegisterRoutes(r, userHandler, commodityHandler, cartHandler)
+		router.RegisterRoutes(r, userHandler, commodityHandler, cartHandler, orderHandler)
 
 		log.Info("Server is running at http://localhost:8080")
 

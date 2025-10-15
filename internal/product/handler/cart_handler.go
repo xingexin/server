@@ -24,6 +24,14 @@ type reqUpdate struct {
 	Quantity int `json:"quantity"`
 }
 
+type cartRemoveFromCart struct {
+	Id int `json:"id" binding:"required"`
+}
+
+type cartGetCart struct {
+	Id int `json:"id" binding:"required"`
+}
+
 func NewCartHandler(cartService *service.CartService, userService *service.UserService) *CartHandler {
 	return &CartHandler{cartService: cartService, userService: userService}
 }
@@ -45,19 +53,19 @@ func (h *CartHandler) AddToCart(c *gin.Context) {
 }
 
 func (h *CartHandler) RemoveFromCart(c *gin.Context) {
-	cardId := 0
-	err := c.ShouldBindUri(&cardId)
+	cardId := cartRemoveFromCart{}
+	err := c.ShouldBindJSON(&cardId)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidParams, "invalid URI")
 		return
 	}
-	err = h.cartService.RemoveFromCart(cardId)
+	err = h.cartService.RemoveFromCart(cardId.Id)
 	if err != nil {
 		response.BadRequest(c, response.CodeInternalError, err.Error())
 		return
 	}
 	response.SuccessWithMessage(c, "remove success", nil)
-	log.Info("cart", cardId, "remove from cart success")
+	log.Info("cart", cardId.Id, "remove from cart success")
 	return
 }
 
@@ -79,18 +87,18 @@ func (h *CartHandler) UpdateCart(c *gin.Context) {
 }
 
 func (h *CartHandler) GetCart(c *gin.Context) {
-	cartId := 0
+	cartId := cartGetCart{}
 	err := c.ShouldBindJSON(&cartId)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidParams, "invalid JSON")
 		return
 	}
-	cart, err := h.cartService.GetCart(cartId)
+	cart, err := h.cartService.GetCart(cartId.Id)
 	if err != nil {
 		response.BadRequest(c, response.CodeInternalError, err.Error())
 		return
 	}
 	response.Success(c, gin.H{"cart": cart})
-	log.Info("cart", cartId, "get cart success")
+	log.Info("cart", cartId.Id, "get cart success")
 	return
 }
