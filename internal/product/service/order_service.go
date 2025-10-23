@@ -14,8 +14,8 @@ func NewOrderService(oRepo repository.OrderRepository) *OrderService {
 	return &OrderService{oRepo: oRepo}
 }
 
-func (os *OrderService) CreateOrder(userId int, commodityId int, quantity int, totalPrice float64, address string) error {
-	order := &model.Order{UserId: userId, CommodityId: commodityId, Quantity: quantity, TotalPrice: totalPrice, Status: "pending", Address: address, CreatedAt: time.Now(), UpdateAt: time.Now()}
+func (os *OrderService) CreateOrder(userId int, commodityId int, quantity int, totalPrice string, address string) error {
+	order := &model.Order{UserId: userId, CommodityId: commodityId, Quantity: quantity, TotalPrice: totalPrice, Status: "pending", Address: address, CreatedAt: time.Now(), UpdatedAt: time.Now()}
 	return os.oRepo.CreateOrder(order)
 }
 

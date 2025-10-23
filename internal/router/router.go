@@ -20,10 +20,12 @@ func RegisterRoutes(r *gin.Engine, userHandler *handler.UserHandler, commodityHa
 	auth.GET("/listCommodity", commodityHandler.ListCommodity)
 	auth.DELETE("/deleteCommodity", commodityHandler.DeleteCommodity)
 	auth.GET("/getCommodity", commodityHandler.FindCommodityByName)
+
 	auth.POST("/addToCart", cartHandler.AddToCart)
-	auth.DELETE("/removeFromCart/", cartHandler.RemoveFromCart)
+	auth.DELETE("/removeFromCart", cartHandler.RemoveFromCart)
 	auth.PUT("/updateCart", cartHandler.UpdateCart)
 	auth.GET("/getCart", cartHandler.GetCart)
+
 	auth.POST("/createOrder", orderHandler.CreateOrder)
 	auth.PUT("/updateOrder", orderHandler.UpdateOrderStatus)
 	auth.DELETE("/deleteOrder", orderHandler.DeleteOrder)

@@ -7,9 +7,9 @@ type Order struct {
 	UserId      int
 	CommodityId int
 	Quantity    int
-	TotalPrice  float64
+	TotalPrice  string
 	Address     string
 	Status      string
 	CreatedAt   time.Time
-	UpdateAt    time.Time
+	UpdatedAt   time.Time
 }

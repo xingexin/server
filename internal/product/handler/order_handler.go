@@ -17,11 +17,11 @@ func NewOrderHandler(oSvc *service.OrderService) *OrderHandler {
 }
 
 type reqCreateOrder struct {
-	UserId      int     `json:"userId"`
-	CommodityId int     `json:"commodityId"`
-	Quantity    int     `json:"quantity"`
-	TotalPrice  float64 `json:"totalPrice"`
-	Address     string  `json:"address"`
+	UserId      int    `json:"user_id"`
+	CommodityId int    `json:"commodity_id"`
+	Quantity    int    `json:"quantity"`
+	TotalPrice  string `json:"total_price"`
+	Address     string `json:"address"`
 }
 
 type reqUpdateOrder struct {
@@ -40,14 +40,14 @@ type reqGetOrder struct {
 
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	req := &reqCreateOrder{}
-	err := c.ShouldBindJSON(&req)
+	err := c.ShouldBindJSON(req)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
 		return
 	}
 	err = h.oSvc.CreateOrder(req.UserId, req.CommodityId, req.Quantity, req.TotalPrice, req.Address)
 	if err != nil {
-		response.InternalServerError(c, response.CodeInternalError, "server busy")
+		response.InternalServerError(c, response.CodeInternalError, err.Error())
 		return
 	}
 	response.Success(c, nil)

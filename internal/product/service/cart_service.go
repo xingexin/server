@@ -15,12 +15,13 @@ func NewCartService(repo repository.CartRepository) *CartService {
 }
 
 func (cs *CartService) AddToCart(userId int, commodityId int, quantity int) error {
+
 	cart := &model.Cart{
 		UserId:      userId,
 		CommodityId: commodityId,
 		Quantity:    quantity,
 		CreatedAt:   time.Now(),
-		UpdateAt:    time.Now(),
+		UpdatedAt:   time.Now(),
 	}
 	return cs.cartRepo.CreateCart(cart)
 }
@@ -35,7 +36,7 @@ func (cs *CartService) UpdateCart(cartId int, quantity int) error {
 		return err
 	}
 	cart.Quantity = quantity
-	cart.UpdateAt = time.Now()
+	cart.UpdatedAt = time.Now()
 	return cs.cartRepo.UpdateCart(cart)
 }
 

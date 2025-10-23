@@ -8,5 +8,5 @@ type Cart struct {
 	CommodityId int
 	Quantity    int
 	CreatedAt   time.Time
-	UpdateAt    time.Time
+	UpdatedAt   time.Time
 }
