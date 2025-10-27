@@ -1,7 +1,7 @@
 # 项目结构
 
 - 仓库：server
-- 生成时间：2025-10-23 16:15:52 UTC
+- 生成时间：2025-10-27 02:04:51 UTC
 - 深度：99
 - 忽略：.git|target|node_modules|.idea|.vscode|dist|build
 
@@ -23,26 +23,54 @@
 │   ├── middleware/
 │   │   └── auth.go
 │   ├── product/
-│   │   ├── handler/
-│   │   │   ├── cart_handler.go
-│   │   │   ├── commodity_handler.go
-│   │   │   ├── order_handler.go
-│   │   │   └── user_handler.go
-│   │   ├── model/
-│   │   │   ├── cart_model.go
-│   │   │   ├── commodity_model.go
-│   │   │   ├── order_model.go
-│   │   │   └── user_model.go
-│   │   ├── repository/
-│   │   │   ├── cart_repository.go
-│   │   │   ├── commodity_repository.go
-│   │   │   ├── order_repository.go
-│   │   │   └── user_repository.go
-│   │   └── service/
-│   │       ├── cart_service.go
-│   │       ├── commodity_service.go
-│   │       ├── order_service.go
-│   │       └── user_service.go
+│   │   ├── cart/
+│   │   │   ├── dto/
+│   │   │   │   ├── request.go
+│   │   │   │   └── response.go
+│   │   │   ├── handler/
+│   │   │   │   └── cart_handler.go
+│   │   │   ├── model/
+│   │   │   │   └── cart_model.go
+│   │   │   ├── repository/
+│   │   │   │   └── cart_repository.go
+│   │   │   └── service/
+│   │   │       └── cart_service.go
+│   │   ├── commodity/
+│   │   │   ├── dto/
+│   │   │   │   ├── request.go
+│   │   │   │   └── response.go
+│   │   │   ├── handler/
+│   │   │   │   └── commodity_handler.go
+│   │   │   ├── model/
+│   │   │   │   └── commodity_model.go
+│   │   │   ├── repository/
+│   │   │   │   └── commodity_repository.go
+│   │   │   └── service/
+│   │   │       └── commodity_service.go
+│   │   ├── order/
+│   │   │   ├── dto/
+│   │   │   │   ├── request.go
+│   │   │   │   └── response.go
+│   │   │   ├── handler/
+│   │   │   │   └── order_handler.go
+│   │   │   ├── model/
+│   │   │   │   └── order_model.go
+│   │   │   ├── repository/
+│   │   │   │   └── order_repository.go
+│   │   │   └── service/
+│   │   │       └── order_service.go
+│   │   └── user/
+│   │       ├── dto/
+│   │       │   ├── request.go
+│   │       │   └── response.go
+│   │       ├── handler/
+│   │       │   └── user_handler.go
+│   │       ├── model/
+│   │       │   └── user_model.go
+│   │       ├── repository/
+│   │       │   └── user_repository.go
+│   │       └── service/
+│   │           └── user_service.go
 │   └── router/
 │       └── router.go
 ├── main.go
@@ -57,7 +85,7 @@
         ├── code.go
         └── response.go
 
-17 directories, 33 files
+37 directories, 41 files
 ```
 
 > 本文件由 GitHub Actions 自动生成，请勿手动编辑。
