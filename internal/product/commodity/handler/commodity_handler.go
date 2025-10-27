@@ -1,8 +1,9 @@
 package handler
 
 import (
-	"server/internal/product/model"
-	"server/internal/product/service"
+	"server/internal/product/commodity/dto"
+	"server/internal/product/commodity/model"
+	"server/internal/product/commodity/service"
 	"server/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -18,15 +19,19 @@ func NewCommodityHandler(cSvc *service.CommodityService) *CommodityHandler {
 }
 
 func (h *CommodityHandler) CreateCommodity(c *gin.Context) {
-	req := &model.Commodity{}
+	var req dto.CreateCommodityRequest
 	err := c.ShouldBindJSON(&req)
-
 	if err != nil {
 		log.Error(err.Error())
 		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
 		return
 	}
-	err = h.cSvc.CreateCommodity(req)
+	commodity := &model.Commodity{
+		Name:  req.Name,
+		Price: req.Price,
+		Stock: req.Stock,
+	}
+	err = h.cSvc.CreateCommodity(commodity)
 	if err != nil {
 		response.BadRequest(c, response.CodeCommodityCreateFailed, err.Error())
 		return
@@ -41,13 +46,13 @@ func (h *CommodityHandler) ListCommodity(c *gin.Context) {
 		response.BadRequest(c, response.CodeCommodityQueryFailed, err.Error())
 		return
 	}
-	res := make([]interface{}, 0, len(commodities))
+	res := make([]dto.CommodityResponse, 0, len(commodities))
 	for _, cdt := range commodities {
-		res = append(res, gin.H{
-			"id":    cdt.ID,
-			"name":  cdt.Name,
-			"price": cdt.Price,
-			"stock": cdt.Stock,
+		res = append(res, dto.CommodityResponse{
+			ID:    cdt.ID,
+			Name:  cdt.Name,
+			Price: cdt.Price,
+			Stock: cdt.Stock,
 		})
 	}
 	response.Success(c, res)
@@ -56,13 +61,19 @@ func (h *CommodityHandler) ListCommodity(c *gin.Context) {
 }
 
 func (h *CommodityHandler) UpdateCommodity(c *gin.Context) {
-	req := &model.Commodity{}
+	var req dto.UpdateCommodityRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
 		return
 	}
-	err = h.cSvc.UpdateCommodity(req)
+	commodity := &model.Commodity{
+		ID:    req.ID,
+		Name:  req.Name,
+		Price: req.Price,
+		Stock: req.Stock,
+	}
+	err = h.cSvc.UpdateCommodity(commodity)
 	if err != nil {
 		response.BadRequest(c, response.CodeCommodityUpdateFailed, err.Error())
 		return
@@ -73,9 +84,7 @@ func (h *CommodityHandler) UpdateCommodity(c *gin.Context) {
 }
 
 func (h *CommodityHandler) DeleteCommodity(c *gin.Context) {
-	req := struct {
-		ID int `json:"id"`
-	}{}
+	var req dto.DeleteCommodityRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
@@ -92,9 +101,7 @@ func (h *CommodityHandler) DeleteCommodity(c *gin.Context) {
 }
 
 func (h *CommodityHandler) FindCommodityByName(c *gin.Context) {
-	req := struct {
-		Name string `json:"name"`
-	}{}
+	var req dto.FindCommodityByNameRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
@@ -106,13 +113,13 @@ func (h *CommodityHandler) FindCommodityByName(c *gin.Context) {
 		response.BadRequest(c, response.CodeCommodityQueryFailed, err.Error())
 		return
 	}
-	res := make([]interface{}, 0, len(commodities))
+	res := make([]dto.CommodityResponse, 0, len(commodities))
 	for _, cdt := range commodities {
-		res = append(res, gin.H{
-			"id":    cdt.ID,
-			"name":  cdt.Name,
-			"price": cdt.Price,
-			"stock": cdt.Stock,
+		res = append(res, dto.CommodityResponse{
+			ID:    cdt.ID,
+			Name:  cdt.Name,
+			Price: cdt.Price,
+			Stock: cdt.Stock,
 		})
 	}
 	response.Success(c, res)

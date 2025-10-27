@@ -1,7 +1,8 @@
 package handler
 
 import (
-	"server/internal/product/service"
+	"server/internal/product/order/dto"
+	"server/internal/product/order/service"
 	"server/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -16,31 +17,9 @@ func NewOrderHandler(oSvc *service.OrderService) *OrderHandler {
 	return &OrderHandler{oSvc: oSvc}
 }
 
-type reqCreateOrder struct {
-	UserId      int    `json:"user_id"`
-	CommodityId int    `json:"commodity_id"`
-	Quantity    int    `json:"quantity"`
-	TotalPrice  string `json:"total_price"`
-	Address     string `json:"address"`
-}
-
-type reqUpdateOrder struct {
-	Id      int    `json:"id"`
-	Status  string `json:"status"`
-	Address string `json:"address"`
-}
-
-type reqDeleteOrder struct {
-	Id int `json:"id"`
-}
-
-type reqGetOrder struct {
-	Id int `json:"id"`
-}
-
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
-	req := &reqCreateOrder{}
-	err := c.ShouldBindJSON(req)
+	var req dto.CreateOrderRequest
+	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
 		return
@@ -55,21 +34,21 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 }
 
 func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
-	req := reqUpdateOrder{}
+	var req dto.UpdateOrderRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
 		return
 	}
 	if req.Status != "" {
-		err = h.oSvc.UpdateOrderStatus(req.Id, req.Status)
+		err = h.oSvc.UpdateOrderStatus(req.ID, req.Status)
 		if err != nil {
 			response.InternalServerError(c, response.CodeInternalError, "server busy")
 			return
 		}
 	}
 	if req.Address != "" {
-		err = h.oSvc.UpdateOrderAddress(req.Id, req.Address)
+		err = h.oSvc.UpdateOrderAddress(req.ID, req.Address)
 		if err != nil {
 			response.InternalServerError(c, response.CodeInternalError, "server busy")
 			return
@@ -81,35 +60,36 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 }
 
 func (h *OrderHandler) DeleteOrder(c *gin.Context) {
-	req := reqDeleteOrder{}
+	var req dto.DeleteOrderRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidParams, "invalid JSON")
 		return
 	}
-	err = h.oSvc.DeleteOrder(req.Id)
+	err = h.oSvc.DeleteOrder(req.ID)
 	if err != nil {
 		response.InternalServerError(c, response.CodeInternalError, "server busy")
 		return
 	}
 	response.SuccessWithMessage(c, "delete success", nil)
-	log.Info("order delete success:", req.Id)
+	log.Info("order delete success:", req.ID)
 	return
 }
 
 func (h *OrderHandler) GetOrder(c *gin.Context) {
-	req := reqGetOrder{}
+	var req dto.GetOrderRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
 		return
 	}
-	order, err := h.oSvc.GetOrderById(req.Id)
+	order, err := h.oSvc.GetOrderById(req.ID)
 	if err != nil {
 		response.InternalServerError(c, response.CodeInternalError, "server busy")
 		return
 	}
-	response.Success(c, gin.H{"order": order})
-	log.Info("order get success:", req.Id)
+	res := dto.OrderResponse{Order: order}
+	response.Success(c, res)
+	log.Info("order get success:", req.ID)
 	return
 }

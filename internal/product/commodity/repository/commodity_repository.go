@@ -2,7 +2,7 @@ package repository
 
 import (
 	"fmt"
-	"server/internal/product/model"
+	"server/internal/product/commodity/model"
 
 	"gorm.io/gorm"
 )

@@ -2,8 +2,8 @@ package service
 
 import (
 	"errors"
-	"server/internal/product/model"
-	"server/internal/product/repository"
+	"server/internal/product/user/model"
+	"server/internal/product/user/repository"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"

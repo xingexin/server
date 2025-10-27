@@ -2,7 +2,7 @@
 package middleware
 
 import (
-	"server/internal/product/service"
+	"server/internal/product/user/service"
 	"server/pkg/response"
 	"strings"
 

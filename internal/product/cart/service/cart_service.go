@@ -1,8 +1,8 @@
 package service
 
 import (
-	"server/internal/product/model"
-	"server/internal/product/repository"
+	"server/internal/product/cart/model"
+	"server/internal/product/cart/repository"
 	"time"
 )
 

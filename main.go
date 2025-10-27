@@ -3,7 +3,11 @@ package main
 import (
 	"database/sql"
 	"server/config"
-	"server/internal/product/handler"
+	cartHandler "server/internal/product/cart/handler"
+	commodityHandler "server/internal/product/commodity/handler"
+	orderHandler "server/internal/product/order/handler"
+	userHandler "server/internal/product/user/handler"
+
 	"server/internal/router"
 	"server/pkg/container"
 	"server/pkg/logger"
@@ -23,10 +27,10 @@ func main() {
 		cfg *config.Config,
 		gormDB *gorm.DB,
 		r *gin.Engine,
-		userHandler *handler.UserHandler,
-		commodityHandler *handler.CommodityHandler,
-		cartHandler *handler.CartHandler,
-		orderHandler *handler.OrderHandler,
+		uHandler *userHandler.UserHandler,
+		cHandler *commodityHandler.CommodityHandler,
+		caHandler *cartHandler.CartHandler,
+		oHandler *orderHandler.OrderHandler,
 	) error {
 		// 初始化日志
 		logger.InitLogger(cfg.Logger.Level)
@@ -47,7 +51,7 @@ func main() {
 		r.Use(gin.Recovery())
 
 		// 注册路由
-		router.RegisterRoutes(r, userHandler, commodityHandler, cartHandler, orderHandler)
+		router.RegisterRoutes(r, uHandler, cHandler, caHandler, oHandler)
 
 		log.Info("Server is running at http://localhost:8080")
 

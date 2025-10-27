@@ -2,32 +2,35 @@ package router
 
 import (
 	"server/internal/middleware"
-	"server/internal/product/handler"
+	cartHandler "server/internal/product/cart/handler"
+	commodityHandler "server/internal/product/commodity/handler"
+	orderHandler "server/internal/product/order/handler"
+	userHandler "server/internal/product/user/handler"
 
 	"github.com/gin-gonic/gin"
 )
 
 var secret = []byte("gee")
 
-func RegisterRoutes(r *gin.Engine, userHandler *handler.UserHandler, commodityHandler *handler.CommodityHandler, cartHandler *handler.CartHandler, orderHandler *handler.OrderHandler) {
+func RegisterRoutes(r *gin.Engine, uHandler *userHandler.UserHandler, cHandler *commodityHandler.CommodityHandler, caHandler *cartHandler.CartHandler, oHandler *orderHandler.OrderHandler) {
 	v1 := r.Group("/v1")
-	v1.POST("/login", userHandler.Login)
-	v1.POST("/register", userHandler.Register)
+	v1.POST("/login", uHandler.Login)
+	v1.POST("/register", uHandler.Register)
 	auth := v1.Group("/")
 	auth.Use(middleware.AuthMiddleWare(secret))
-	auth.POST("/createCommodity", commodityHandler.CreateCommodity)
-	auth.POST("/updateCommodity", commodityHandler.UpdateCommodity)
-	auth.GET("/listCommodity", commodityHandler.ListCommodity)
-	auth.DELETE("/deleteCommodity", commodityHandler.DeleteCommodity)
-	auth.GET("/getCommodity", commodityHandler.FindCommodityByName)
+	auth.POST("/createCommodity", cHandler.CreateCommodity)
+	auth.POST("/updateCommodity", cHandler.UpdateCommodity)
+	auth.GET("/listCommodity", cHandler.ListCommodity)
+	auth.DELETE("/deleteCommodity", cHandler.DeleteCommodity)
+	auth.GET("/getCommodity", cHandler.FindCommodityByName)
 
-	auth.POST("/addToCart", cartHandler.AddToCart)
-	auth.DELETE("/removeFromCart", cartHandler.RemoveFromCart)
-	auth.PUT("/updateCart", cartHandler.UpdateCart)
-	auth.GET("/getCart", cartHandler.GetCart)
+	auth.POST("/addToCart", caHandler.AddToCart)
+	auth.DELETE("/removeFromCart", caHandler.RemoveFromCart)
+	auth.PUT("/updateCart", caHandler.UpdateCart)
+	auth.GET("/getCart", caHandler.GetCart)
 
-	auth.POST("/createOrder", orderHandler.CreateOrder)
-	auth.PUT("/updateOrder", orderHandler.UpdateOrderStatus)
-	auth.DELETE("/deleteOrder", orderHandler.DeleteOrder)
-	auth.GET("/getOrder", orderHandler.GetOrder)
+	auth.POST("/createOrder", oHandler.CreateOrder)
+	auth.PUT("/updateOrder", oHandler.UpdateOrderStatus)
+	auth.DELETE("/deleteOrder", oHandler.DeleteOrder)
+	auth.GET("/getOrder", oHandler.GetOrder)
 }

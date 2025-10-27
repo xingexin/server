@@ -1,7 +1,8 @@
 package handler
 
 import (
-	"server/internal/product/service"
+	"server/internal/product/user/dto"
+	"server/internal/product/user/service"
 	"server/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -17,11 +18,7 @@ func NewUserHandler(uSvc *service.UserService) *UserHandler {
 }
 
 func (h *UserHandler) Register(c *gin.Context) {
-	req := struct {
-		Account  string `json:"account"`
-		Password string `json:"password"`
-		Name     string `json:"name"`
-	}{}
+	var req dto.RegisterRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
@@ -38,10 +35,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 }
 
 func (h *UserHandler) Login(c *gin.Context) {
-	req := struct {
-		Account  string `json:"account"`
-		Password string `json:"password"`
-	}{}
+	var req dto.LoginRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
@@ -53,7 +47,8 @@ func (h *UserHandler) Login(c *gin.Context) {
 		response.Unauthorized(c, response.CodeInvalidPassword, "invalid account or password")
 		return
 	}
-	response.Success(c, gin.H{"token": token})
+	res := dto.LoginResponse{Token: token}
+	response.Success(c, res)
 	log.Info("user login success:", req.Account)
 	return
 }

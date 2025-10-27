@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"server/internal/product/model"
+	"server/internal/product/order/model"
 
 	"gorm.io/gorm"
 )

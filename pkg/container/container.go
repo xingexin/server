@@ -2,9 +2,18 @@ package container
 
 import (
 	"server/config"
-	"server/internal/product/handler"
-	"server/internal/product/repository"
-	"server/internal/product/service"
+	cartHandler "server/internal/product/cart/handler"
+	cartRepo "server/internal/product/cart/repository"
+	cartService "server/internal/product/cart/service"
+	commodityHandler "server/internal/product/commodity/handler"
+	commodityRepo "server/internal/product/commodity/repository"
+	commodityService "server/internal/product/commodity/service"
+	orderHandler "server/internal/product/order/handler"
+	orderRepo "server/internal/product/order/repository"
+	orderService "server/internal/product/order/service"
+	userHandler "server/internal/product/user/handler"
+	userRepo "server/internal/product/user/repository"
+	userService "server/internal/product/user/service"
 	"server/pkg/db"
 
 	"github.com/gin-gonic/gin"
@@ -25,22 +34,22 @@ func BuildContainer() *dig.Container {
 	})
 
 	// 提供 Repositories
-	container.Provide(repository.NewUserRepository)
-	container.Provide(repository.NewCommodityRepository)
-	container.Provide(repository.NewCartRepository)
-	container.Provide(repository.NewOrderRepository)
+	container.Provide(userRepo.NewUserRepository)
+	container.Provide(commodityRepo.NewCommodityRepository)
+	container.Provide(cartRepo.NewCartRepository)
+	container.Provide(orderRepo.NewOrderRepository)
 
 	// 提供 Services
-	container.Provide(service.NewUserService)
-	container.Provide(service.NewCommodityService)
-	container.Provide(service.NewCartService)
-	container.Provide(service.NewOrderService)
+	container.Provide(userService.NewUserService)
+	container.Provide(commodityService.NewCommodityService)
+	container.Provide(cartService.NewCartService)
+	container.Provide(orderService.NewOrderService)
 
 	// 提供 Handlers
-	container.Provide(handler.NewUserHandler)
-	container.Provide(handler.NewCommodityHandler)
-	container.Provide(handler.NewCartHandler)
-	container.Provide(handler.NewOrderHandler)
+	container.Provide(userHandler.NewUserHandler)
+	container.Provide(commodityHandler.NewCommodityHandler)
+	container.Provide(cartHandler.NewCartHandler)
+	container.Provide(orderHandler.NewOrderHandler)
 
 	// 提供 Gin Engine
 	container.Provide(gin.Default)
