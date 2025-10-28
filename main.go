@@ -14,6 +14,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -25,6 +26,7 @@ func main() {
 	// 使用 Invoke 来运行应用，dig 会自动解析所有依赖
 	err := c.Invoke(func(
 		cfg *config.Config,
+		rdb *redis.Client,
 		gormDB *gorm.DB,
 		r *gin.Engine,
 		uHandler *userHandler.UserHandler,

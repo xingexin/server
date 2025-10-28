@@ -1,6 +1,8 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"github.com/spf13/viper"
+)
 
 type Config struct {
 	Server struct {
@@ -12,6 +14,12 @@ type Config struct {
 	}
 	Logger struct {
 		Level string
+	}
+	Redis struct {
+		Addr     string
+		Password string
+		DB       int
+		PoolSize int
 	}
 }
 
