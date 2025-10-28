@@ -1,7 +1,7 @@
 # 项目结构
 
 - 仓库：server
-- 生成时间：2025-10-27 02:04:51 UTC
+- 生成时间：2025-10-28 20:13:25 UTC
 - 深度：99
 - 忽略：.git|target|node_modules|.idea|.vscode|dist|build
 
@@ -44,7 +44,8 @@
 │   │   │   ├── model/
 │   │   │   │   └── commodity_model.go
 │   │   │   ├── repository/
-│   │   │   │   └── commodity_repository.go
+│   │   │   │   ├── commodity_repository.go
+│   │   │   │   └── stock_cache_repository.go
 │   │   │   └── service/
 │   │   │       └── commodity_service.go
 │   │   ├── order/
@@ -81,11 +82,13 @@
     │   └── dataBase.go
     ├── logger/
     │   └── logger.go
+    ├── redis/
+    │   └── redis.go
     └── response/
         ├── code.go
         └── response.go
 
-37 directories, 41 files
+38 directories, 43 files
 ```
 
 > 本文件由 GitHub Actions 自动生成，请勿手动编辑。
