@@ -4,6 +4,7 @@ import (
 	"server/internal/product/order/dto"
 	"server/internal/product/order/service"
 	"server/pkg/response"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -34,21 +35,28 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 }
 
 func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		response.BadRequest(c, response.CodeInvalidParams, "invalid id parameter")
+		return
+	}
+
 	var req dto.UpdateOrderRequest
-	err := c.ShouldBindJSON(&req)
+	err = c.ShouldBindJSON(&req)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
 		return
 	}
 	if req.Status != "" {
-		err = h.oSvc.UpdateOrderStatus(req.ID, req.Status)
+		err = h.oSvc.UpdateOrderStatus(id, req.Status)
 		if err != nil {
 			response.InternalServerError(c, response.CodeInternalError, "server busy")
 			return
 		}
 	}
 	if req.Address != "" {
-		err = h.oSvc.UpdateOrderAddress(req.ID, req.Address)
+		err = h.oSvc.UpdateOrderAddress(id, req.Address)
 		if err != nil {
 			response.InternalServerError(c, response.CodeInternalError, "server busy")
 			return
@@ -60,36 +68,36 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 }
 
 func (h *OrderHandler) DeleteOrder(c *gin.Context) {
-	var req dto.DeleteOrderRequest
-	err := c.ShouldBindJSON(&req)
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		response.BadRequest(c, response.CodeInvalidParams, "invalid JSON")
+		response.BadRequest(c, response.CodeInvalidParams, "invalid id parameter")
 		return
 	}
-	err = h.oSvc.DeleteOrder(req.ID)
+	err = h.oSvc.DeleteOrder(id)
 	if err != nil {
 		response.InternalServerError(c, response.CodeInternalError, "server busy")
 		return
 	}
 	response.SuccessWithMessage(c, "delete success", nil)
-	log.Info("order delete success:", req.ID)
+	log.Info("order delete success:", id)
 	return
 }
 
 func (h *OrderHandler) GetOrder(c *gin.Context) {
-	var req dto.GetOrderRequest
-	err := c.ShouldBindJSON(&req)
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
+		response.BadRequest(c, response.CodeInvalidParams, "invalid id parameter")
 		return
 	}
-	order, err := h.oSvc.GetOrderById(req.ID)
+	order, err := h.oSvc.GetOrderById(id)
 	if err != nil {
 		response.InternalServerError(c, response.CodeInternalError, "server busy")
 		return
 	}
 	res := dto.OrderResponse{Order: order}
 	response.Success(c, res)
-	log.Info("order get success:", req.ID)
+	log.Info("order get success:", id)
 	return
 }

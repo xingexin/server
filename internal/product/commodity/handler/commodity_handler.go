@@ -5,6 +5,7 @@ import (
 	"server/internal/product/commodity/model"
 	"server/internal/product/commodity/service"
 	"server/pkg/response"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -61,14 +62,21 @@ func (h *CommodityHandler) ListCommodity(c *gin.Context) {
 }
 
 func (h *CommodityHandler) UpdateCommodity(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		response.BadRequest(c, response.CodeInvalidParams, "invalid id parameter")
+		return
+	}
+
 	var req dto.UpdateCommodityRequest
-	err := c.ShouldBindJSON(&req)
+	err = c.ShouldBindJSON(&req)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
 		return
 	}
 	commodity := &model.Commodity{
-		ID:    req.ID,
+		ID:    id,
 		Name:  req.Name,
 		Price: req.Price,
 		Stock: req.Stock,
@@ -84,31 +92,30 @@ func (h *CommodityHandler) UpdateCommodity(c *gin.Context) {
 }
 
 func (h *CommodityHandler) DeleteCommodity(c *gin.Context) {
-	var req dto.DeleteCommodityRequest
-	err := c.ShouldBindJSON(&req)
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
+		response.BadRequest(c, response.CodeInvalidParams, "invalid id parameter")
 		return
 	}
-	err = h.cSvc.RemoveCommodity(req.ID)
+	err = h.cSvc.RemoveCommodity(id)
 	if err != nil {
 		response.BadRequest(c, response.CodeCommodityDeleteFailed, err.Error())
 		return
 	}
 	response.SuccessWithMessage(c, "delete success", nil)
-	log.Info("delete commodity success:", req.ID)
+	log.Info("delete commodity success:", id)
 	return
 }
 
 func (h *CommodityHandler) FindCommodityByName(c *gin.Context) {
-	var req dto.FindCommodityByNameRequest
-	err := c.ShouldBindJSON(&req)
-	if err != nil {
-		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
+	name := c.Query("name")
+	if name == "" {
+		response.BadRequest(c, response.CodeInvalidParams, "name parameter is required")
 		return
 	}
 
-	commodities, err := h.cSvc.FindCommodityByName(req.Name)
+	commodities, err := h.cSvc.FindCommodityByName(name)
 	if err != nil {
 		response.BadRequest(c, response.CodeCommodityQueryFailed, err.Error())
 		return
@@ -123,6 +130,6 @@ func (h *CommodityHandler) FindCommodityByName(c *gin.Context) {
 		})
 	}
 	response.Success(c, res)
-	log.Info("user", "find commodity by name success:", req.Name)
+	log.Info("user", "find commodity by name success:", name)
 	return
 }

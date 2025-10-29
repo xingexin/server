@@ -2,11 +2,15 @@ package main
 
 import (
 	"database/sql"
+	"os"
+	"os/signal"
 	"server/config"
 	cartHandler "server/internal/product/cart/handler"
 	commodityHandler "server/internal/product/commodity/handler"
 	orderHandler "server/internal/product/order/handler"
+	"server/internal/product/scheduler"
 	userHandler "server/internal/product/user/handler"
+	"syscall"
 
 	"server/internal/router"
 	"server/pkg/container"
@@ -33,6 +37,7 @@ func main() {
 		cHandler *commodityHandler.CommodityHandler,
 		caHandler *cartHandler.CartHandler,
 		oHandler *orderHandler.OrderHandler,
+		stockScheduler *scheduler.Scheduler,
 	) error {
 		// 初始化日志
 		logger.InitLogger(cfg.Logger.Level)
@@ -55,10 +60,35 @@ func main() {
 		// 注册路由
 		router.RegisterRoutes(r, uHandler, cHandler, caHandler, oHandler)
 
-		log.Info("Server is running at http://localhost:8080")
+		// 启动Scheduler（在独立goroutine中）
+		go func() {
+			log.Info("Starting stock sync scheduler...")
+			if err := stockScheduler.Start(); err != nil {
+				log.Error("Scheduler error:", err)
+			}
+		}()
 
-		// 启动服务器
-		return r.Run("localhost:" + strconv.Itoa(cfg.Server.Port))
+		// 监听退出信号
+		quit := make(chan os.Signal, 1)
+		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+		// 在goroutine中启动HTTP服务器
+		go func() {
+			log.Info("Server is running at http://localhost:8080")
+			if err := r.Run("localhost:" + strconv.Itoa(cfg.Server.Port)); err != nil {
+				log.Error("Server error:", err)
+			}
+		}()
+
+		// 等待退出信号
+		<-quit
+		log.Info("Shutting down gracefully...")
+
+		// 停止Scheduler
+		stockScheduler.Stop()
+
+		log.Info("Server stopped")
+		return nil
 	})
 
 	if err != nil {

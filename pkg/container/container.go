@@ -11,6 +11,7 @@ import (
 	orderHandler "server/internal/product/order/handler"
 	orderRepo "server/internal/product/order/repository"
 	orderService "server/internal/product/order/service"
+	"server/internal/product/scheduler"
 	userHandler "server/internal/product/user/handler"
 	userRepo "server/internal/product/user/repository"
 	userService "server/internal/product/user/service"
@@ -48,6 +49,9 @@ func BuildContainer() *dig.Container {
 	}
 
 	// 提供 Repositories
+	if err := container.Provide(commodityRepo.NewRedisCommodityRepository); err != nil {
+		log.Fatalf("Failed to provide RedisCommodityRepository: %v", err)
+	}
 	if err := container.Provide(userRepo.NewUserRepository); err != nil {
 		log.Fatalf("Failed to provide UserRepository: %v", err)
 	}
@@ -73,6 +77,14 @@ func BuildContainer() *dig.Container {
 	}
 	if err := container.Provide(orderService.NewOrderService); err != nil {
 		log.Fatalf("Failed to provide OrderService: %v", err)
+	}
+	if err := container.Provide(commodityService.NewStockCacheService); err != nil {
+		log.Fatalf("Failed to provide StockCacheService: %v", err)
+	}
+
+	// 提供 Scheduler
+	if err := container.Provide(scheduler.NewScheduler); err != nil {
+		log.Fatalf("Failed to provide Scheduler: %v", err)
 	}
 
 	// 提供 Handlers

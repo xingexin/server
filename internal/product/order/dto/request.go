@@ -11,17 +11,6 @@ type CreateOrderRequest struct {
 
 // UpdateOrderRequest 更新订单请求
 type UpdateOrderRequest struct {
-	ID      int    `json:"id" binding:"required"`
 	Status  string `json:"status"`
 	Address string `json:"address"`
-}
-
-// DeleteOrderRequest 删除订单请求
-type DeleteOrderRequest struct {
-	ID int `json:"id" binding:"required"`
-}
-
-// GetOrderRequest 获取订单请求
-type GetOrderRequest struct {
-	ID int `json:"id" binding:"required"`
 }
