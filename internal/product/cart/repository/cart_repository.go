@@ -15,6 +15,7 @@ type cartWriter interface {
 
 type cartReader interface {
 	FindCartById(id int) (*model.Cart, error)
+	FindCartByUserId(userId int) ([]*model.Cart, error)
 	ListCart() ([]*model.Cart, error)
 }
 
@@ -56,6 +57,15 @@ func (cRepo *gormCartRepository) FindCartById(id int) (*model.Cart, error) {
 		return nil, err
 	}
 	return &cart, nil
+}
+
+func (cRepo *gormCartRepository) FindCartByUserId(userId int) ([]*model.Cart, error) {
+	var carts []*model.Cart
+	err := cRepo.gormDB.Where("user_id = ?", userId).Find(&carts).Error
+	if err != nil {
+		return nil, err
+	}
+	return carts, nil
 }
 
 func (cRepo *gormCartRepository) ListCart() ([]*model.Cart, error) {

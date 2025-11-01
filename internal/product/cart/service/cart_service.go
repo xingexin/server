@@ -40,6 +40,6 @@ func (cs *CartService) UpdateCart(cartId int, quantity int) error {
 	return cs.cartRepo.UpdateCart(cart)
 }
 
-func (cs *CartService) GetCart(cartId int) (*model.Cart, error) {
-	return cs.cartRepo.FindCartById(cartId)
+func (cs *CartService) GetCart(userId int) ([]*model.Cart, error) {
+	return cs.cartRepo.FindCartByUserId(userId)
 }

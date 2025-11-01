@@ -94,12 +94,12 @@ func (h *CartHandler) GetCart(c *gin.Context) {
 	}
 	uid := userID.(int)
 
-	cart, err := h.cartService.GetCart(uid)
+	items, err := h.cartService.GetCart(uid)
 	if err != nil {
 		response.BadRequest(c, response.CodeInternalError, err.Error())
 		return
 	}
-	res := dto.CartResponse{Cart: cart}
+	res := dto.CartResponse{Items: items}
 	response.Success(c, res)
 	log.Info("user", uid, "get cart success")
 	return

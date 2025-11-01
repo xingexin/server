@@ -19,21 +19,27 @@ func NewOrderHandler(oSvc *service.OrderService) *OrderHandler {
 }
 
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
-	idStr := c.Param("id")
-	userID, _ := strconv.Atoi(idStr)
+	// 从JWT获取认证后的userID
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.Unauthorized(c, response.CodeUnauthorized, "user not authenticated")
+		return
+	}
+	uid := userID.(int)
+
 	var req dto.CreateOrderRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
 		return
 	}
-	err = h.oSvc.CreateOrder(userID, req.CommodityId, req.Quantity, req.TotalPrice, req.Address)
+	err = h.oSvc.CreateOrder(uid, req.CommodityId, req.Quantity, req.TotalPrice, req.Address)
 	if err != nil {
 		response.InternalServerError(c, response.CodeInternalError, err.Error())
 		return
 	}
 	response.Success(c, nil)
-	log.Info("order create success:", userID, req.CommodityId)
+	log.Info("order create success, userID:", uid, "commodityID:", req.CommodityId)
 }
 
 func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
