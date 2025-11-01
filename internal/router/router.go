@@ -30,7 +30,7 @@ func RegisterRoutes(r *gin.Engine, uHandler *userHandler.UserHandler, cHandler *
 	auth.PUT("/cart/:id", caHandler.UpdateCart)
 	auth.GET("/cart/:id", caHandler.GetCart)
 
-	auth.POST("/order", oHandler.CreateOrder)
+	auth.POST("/order/:id", oHandler.CreateOrder)
 	auth.PUT("/order/:id", oHandler.UpdateOrderStatus)
 	auth.DELETE("/order/:id", oHandler.DeleteOrder)
 	auth.GET("/order/:id", oHandler.GetOrder)

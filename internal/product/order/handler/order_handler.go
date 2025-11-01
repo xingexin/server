@@ -19,19 +19,21 @@ func NewOrderHandler(oSvc *service.OrderService) *OrderHandler {
 }
 
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
+	idStr := c.Param("id")
+	userID, _ := strconv.Atoi(idStr)
 	var req dto.CreateOrderRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
 		return
 	}
-	err = h.oSvc.CreateOrder(req.UserId, req.CommodityId, req.Quantity, req.TotalPrice, req.Address)
+	err = h.oSvc.CreateOrder(userID, req.CommodityId, req.Quantity, req.TotalPrice, req.Address)
 	if err != nil {
 		response.InternalServerError(c, response.CodeInternalError, err.Error())
 		return
 	}
 	response.Success(c, nil)
-	log.Info("order create success:", req.UserId, req.CommodityId)
+	log.Info("order create success:", userID, req.CommodityId)
 }
 
 func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {

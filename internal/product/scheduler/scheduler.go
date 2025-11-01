@@ -21,17 +21,19 @@ func NewScheduler(cStockSvc *service.StockCacheService) *Scheduler {
 }
 
 func (s *Scheduler) Start() error {
-	ticker := time.NewTicker(time.Second * 5)
+	ticker := time.NewTicker(time.Second * 10)
 	defer ticker.Stop()
 
 	log.Info("Stock sync scheduler started")
-
+	count := 0
 	for {
 		select {
 		case <-ticker.C:
 			if err := s.cStockSvc.SyncAllStock(context.Background()); err != nil {
 				log.Error("Stock sync failed:", err)
 			}
+			count++
+			log.Info("Stock sync scheduler finished", " count:", count)
 		case <-s.stopChan:
 			log.Info("Stock sync scheduler stopped")
 			return nil

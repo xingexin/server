@@ -21,23 +21,23 @@ func getDeltaCacheKey(commodityId int) string {
 
 type StockCacheRepository interface {
 	InitStockCache(ctx context.Context, commodityId int, stock int) error
-	DecreaseStock(ctx context.Context, commodityId int, quantity int) (bool, error)
+	DecreaseStock(ctx context.Context, commodityId int, quantity int) (int, error)
 	IncreaseStock(ctx context.Context, commodityId int, quantity int) error
 	SyncStock(ctx context.Context, commodityId int) error
 	GetAllDeltaKey(ctx context.Context) ([]string, error)
 	GetDeltaValue(ctx context.Context, key string) (int, error)
 }
 
-type RedisCommodityRepository struct {
+type redisCommodityRepository struct {
 	cRedisRepo *redis.Client
 	cRepo      *gorm.DB
 }
 
 func NewRedisCommodityRepository(cRedisRepo *redis.Client, cRepo *gorm.DB) StockCacheRepository {
-	return &RedisCommodityRepository{cRedisRepo: cRedisRepo, cRepo: cRepo}
+	return &redisCommodityRepository{cRedisRepo: cRedisRepo, cRepo: cRepo}
 }
 
-func (rRepo *RedisCommodityRepository) InitStockCache(ctx context.Context, commodityId int, stock int) error {
+func (rRepo *redisCommodityRepository) InitStockCache(ctx context.Context, commodityId int, stock int) error {
 	if err := rRepo.cRedisRepo.Set(ctx, getStockCacheKey(commodityId), stock, time.Hour*24).Err(); err != nil {
 		log.Error("Failed to initialize stock cache:", err)
 		return err
@@ -46,10 +46,13 @@ func (rRepo *RedisCommodityRepository) InitStockCache(ctx context.Context, commo
 	return nil
 }
 
-func (rRepo *RedisCommodityRepository) DecreaseStock(ctx context.Context, commodityId int, quantity int) (bool, error) {
+func (rRepo *redisCommodityRepository) DecreaseStock(ctx context.Context, commodityId int, quantity int) (int, error) {
+	if rRepo == nil || rRepo.cRedisRepo == nil {
+		panic("redis repository is nil")
+	}
 	if quantity <= 0 {
 		log.Warning("Invalid quantity:", quantity)
-		return false, fmt.Errorf("invalid quantity %d", quantity)
+		return -1, fmt.Errorf("invalid quantity %d", quantity)
 	}
 	stockKey := getStockCacheKey(commodityId)
 	deltaKey := getDeltaCacheKey(commodityId)
@@ -59,13 +62,13 @@ func (rRepo *RedisCommodityRepository) DecreaseStock(ctx context.Context, commod
 	local delta_key = KEYS[2]
 	local quantity = tonumber(ARGV[1])
 
-	local current_stock = redis.call("GET", stock_key)
+	local current_stock = tonumber(redis.call("GET", stock_key))
 	if not current_stock then
-		return -1
+		return 2
 	end
 
 	if current_stock < quantity then
-		return -2
+		return 3
 	end
 	redis.call("DECRBY", stock_key, quantity)
 	redis.call("INCRBY", delta_key, quantity)
@@ -75,21 +78,21 @@ func (rRepo *RedisCommodityRepository) DecreaseStock(ctx context.Context, commod
 	result, err := rRepo.cRedisRepo.Eval(ctx, luaScript, []string{stockKey, deltaKey}, quantity).Result()
 	if err != nil {
 		log.Error("Failed to decrease stock:", err)
-		return false, err
+		return 1, err
 	}
-	if result.(int64) == -1 {
+	if result.(int64) == 2 {
 		log.Warning("Stock cache not initialized for commodity ID", commodityId)
-		return false, fmt.Errorf("stock cache not initialized")
+		return 2, fmt.Errorf("stock cache not initialized")
 	}
-	if result.(int64) == -2 {
+	if result.(int64) == 3 {
 		log.Warning("Insufficient stock for commodity ID", commodityId)
-		return false, fmt.Errorf("insufficient stock")
+		return 3, fmt.Errorf("insufficient stock")
 	}
 	log.Debug("Decreased stock for commodity ID", commodityId, "by", quantity)
-	return true, nil
+	return 0, nil
 }
 
-func (rRepo *RedisCommodityRepository) IncreaseStock(ctx context.Context, commodityId int, quantity int) error {
+func (rRepo *redisCommodityRepository) IncreaseStock(ctx context.Context, commodityId int, quantity int) error {
 	if quantity <= 0 {
 		log.Warning("Invalid quantity:", quantity)
 		return fmt.Errorf("invalid quantity %d", quantity)
@@ -123,7 +126,7 @@ func (rRepo *RedisCommodityRepository) IncreaseStock(ctx context.Context, commod
 	return nil
 }
 
-func (rRepo *RedisCommodityRepository) SyncStock(ctx context.Context, commodityId int) error {
+func (rRepo *redisCommodityRepository) SyncStock(ctx context.Context, commodityId int) error {
 	deltaKey := getDeltaCacheKey(commodityId)
 	luaScript := `
 	local delta_key = KEYS[1]
@@ -164,7 +167,7 @@ func (rRepo *RedisCommodityRepository) SyncStock(ctx context.Context, commodityI
 	return nil
 }
 
-func (rRepo *RedisCommodityRepository) GetAllDeltaKey(ctx context.Context) ([]string, error) {
+func (rRepo *redisCommodityRepository) GetAllDeltaKey(ctx context.Context) ([]string, error) {
 	res := make([]string, 0)
 	iter := rRepo.cRedisRepo.Scan(ctx, 0, "delta_key_*", 100).Iterator() //分100条每页
 	for iter.Next(ctx) {
@@ -177,7 +180,7 @@ func (rRepo *RedisCommodityRepository) GetAllDeltaKey(ctx context.Context) ([]st
 	return res, nil
 }
 
-func (rRepo *RedisCommodityRepository) GetDeltaValue(ctx context.Context, key string) (int, error) {
+func (rRepo *redisCommodityRepository) GetDeltaValue(ctx context.Context, key string) (int, error) {
 	res, err := rRepo.cRedisRepo.Get(ctx, key).Result()
 	if err != nil {
 		log.Error("Failed to get delta value:", err)

@@ -50,7 +50,7 @@ func BuildContainer() *dig.Container {
 
 	// 提供 Repositories
 	if err := container.Provide(commodityRepo.NewRedisCommodityRepository); err != nil {
-		log.Fatalf("Failed to provide RedisCommodityRepository: %v", err)
+		log.Fatalf("Failed to provide redisCommodityRepository: %v", err)
 	}
 	if err := container.Provide(userRepo.NewUserRepository); err != nil {
 		log.Fatalf("Failed to provide UserRepository: %v", err)

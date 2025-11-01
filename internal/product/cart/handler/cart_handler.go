@@ -21,19 +21,27 @@ func NewCartHandler(cartService *service.CartService, uService *userService.User
 }
 
 func (h *CartHandler) AddToCart(c *gin.Context) {
+	// 从JWT获取认证后的userID
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.Unauthorized(c, response.CodeUnauthorized, "user not authenticated")
+		return
+	}
+	uid := userID.(int)
+
 	var req dto.AddToCartRequest
 	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		response.BadRequest(c, response.CodeInvalidJSON, "invalid JSON")
 		return
 	}
-	err = h.cartService.AddToCart(req.UserId, req.CommodityId, req.Quantity)
+	err = h.cartService.AddToCart(uid, req.CommodityId, req.Quantity)
 	if err != nil {
 		response.BadRequest(c, response.CodeInternalError, err.Error())
 		return
 	}
 	response.SuccessWithMessage(c, "add success", nil)
-	log.Info("user", req.UserId, "add to cart success")
+	log.Info("user", uid, "add to cart success")
 }
 
 func (h *CartHandler) RemoveFromCart(c *gin.Context) {
@@ -78,19 +86,21 @@ func (h *CartHandler) UpdateCart(c *gin.Context) {
 }
 
 func (h *CartHandler) GetCart(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		response.BadRequest(c, response.CodeInvalidParams, "invalid id parameter")
+	// 从JWT获取认证后的userID
+	userID, exists := c.Get("userID")
+	if !exists {
+		response.Unauthorized(c, response.CodeUnauthorized, "user not authenticated")
 		return
 	}
-	cart, err := h.cartService.GetCart(id)
+	uid := userID.(int)
+
+	cart, err := h.cartService.GetCart(uid)
 	if err != nil {
 		response.BadRequest(c, response.CodeInternalError, err.Error())
 		return
 	}
 	res := dto.CartResponse{Cart: cart}
 	response.Success(c, res)
-	log.Info("cart", id, "get cart success")
+	log.Info("user", uid, "get cart success")
 	return
 }
