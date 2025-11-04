@@ -49,6 +49,9 @@ func BuildContainer() *dig.Container {
 	}
 
 	// 提供 Repositories
+	if err := container.Provide(orderRepo.NewOrderDQRepository); err != nil {
+		log.Fatalf("Failed to provide OrderDQRepository: %v", err)
+	}
 	if err := container.Provide(commodityRepo.NewRedisCommodityRepository); err != nil {
 		log.Fatalf("Failed to provide redisCommodityRepository: %v", err)
 	}
@@ -66,6 +69,9 @@ func BuildContainer() *dig.Container {
 	}
 
 	// 提供 Services
+	if err := container.Provide(orderService.NewOrderCancelService); err != nil {
+		log.Fatalf("Failed to provide OrderCancelService: %v", err)
+	}
 	if err := container.Provide(userService.NewUserService); err != nil {
 		log.Fatalf("Failed to provide UserService: %v", err)
 	}
@@ -83,6 +89,9 @@ func BuildContainer() *dig.Container {
 	}
 
 	// 提供 Scheduler
+	if err := container.Provide(scheduler.NewOrderDQScheduler); err != nil {
+		log.Fatalf("Failed to provide OrderDQScheduler: %v", err)
+	}
 	if err := container.Provide(scheduler.NewScheduler); err != nil {
 		log.Fatalf("Failed to provide Scheduler: %v", err)
 	}

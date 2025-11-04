@@ -38,6 +38,7 @@ func main() {
 		caHandler *cartHandler.CartHandler,
 		oHandler *orderHandler.OrderHandler,
 		stockScheduler *scheduler.Scheduler,
+		orderDQScheduler *scheduler.OrderDQScheduler,
 	) error {
 		// 初始化日志
 		logger.InitLogger(cfg.Logger.Level)
@@ -67,7 +68,12 @@ func main() {
 				log.Error("Scheduler error:", err)
 			}
 		}()
-
+		go func() {
+			log.Info("Starting Order DQ Scheduler...")
+			if err := orderDQScheduler.Start(); err != nil {
+				log.Error("Order DQ Scheduler error:", err)
+			}
+		}()
 		// 监听退出信号
 		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

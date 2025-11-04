@@ -24,3 +24,27 @@ func InitRedis(cfg *config.Config) (*redis.Client, error) {
 	}
 	return rdb, nil
 }
+
+func EnqueueDelayTask(ctx context.Context, rdb *redis.Client, id, payload string, time int64) error {
+	pipe := rdb.TxPipeline()
+	pipe.ZAdd(ctx, "dq:ready", redis.Z{Score: float64(time), Member: id})
+	pipe.Set(ctx, "dq:payload:"+id, payload, 0)
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		log.Errorf("Failed to enqueue job %s: %v", id, err)
+		return err
+	}
+	return nil
+}
+
+func Ack(ctx context.Context, rdb *redis.Client, id string) error {
+	pipe := rdb.TxPipeline()
+	pipe.ZRem(ctx, "dq:ready", id)
+	pipe.Del(ctx, "dq:payload:"+id)
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		log.Errorf("Failed to acknowledge job %s: %v", id, err)
+		return err
+	}
+	return nil
+}

@@ -9,13 +9,19 @@ import (
 )
 
 type OrderService struct {
-	oRepo         repository.OrderRepository
-	cRedisRepo    commodityRepository.StockCacheRepository
-	commodityRepo commodityRepository.CommodityRepository
+	oRepo              repository.OrderRepository
+	cRedisRepo         commodityRepository.StockCacheRepository
+	commodityRepo      commodityRepository.CommodityRepository
+	orderCancelService OrderCancelService
 }
 
-func NewOrderService(oRepo repository.OrderRepository, cRedisRepo commodityRepository.StockCacheRepository, commodityRepo commodityRepository.CommodityRepository) *OrderService {
-	return &OrderService{oRepo: oRepo, cRedisRepo: cRedisRepo, commodityRepo: commodityRepo}
+func NewOrderService(oRepo repository.OrderRepository, cRedisRepo commodityRepository.StockCacheRepository, commodityRepo commodityRepository.CommodityRepository, orderCancelService OrderCancelService) *OrderService {
+	return &OrderService{
+		oRepo:              oRepo,
+		cRedisRepo:         cRedisRepo,
+		commodityRepo:      commodityRepo,
+		orderCancelService: orderCancelService,
+	}
 }
 
 func (os *OrderService) CreateOrder(userId int, commodityId int, quantity int, totalPrice string, address string) error {
@@ -34,7 +40,15 @@ func (os *OrderService) CreateOrder(userId int, commodityId int, quantity int, t
 			return err
 		}
 	}
-	return os.oRepo.CreateOrder(order)
+	err = os.oRepo.CreateOrder(order)
+	if err != nil {
+		return err
+	}
+	err = os.orderCancelService.createOrderTask(order.Id, commodityId, quantity)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (os *OrderService) UpdateOrderStatus(id int, status string) error {
