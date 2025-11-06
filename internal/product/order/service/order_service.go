@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// OrderService 提供订单相关的业务逻辑服务
 type OrderService struct {
 	oRepo              repository.OrderRepository
 	cRedisRepo         commodityRepository.StockCacheRepository
@@ -15,6 +16,7 @@ type OrderService struct {
 	orderCancelService OrderCancelService
 }
 
+// NewOrderService 创建一个新的订单服务实例
 func NewOrderService(oRepo repository.OrderRepository, cRedisRepo commodityRepository.StockCacheRepository, commodityRepo commodityRepository.CommodityRepository, orderCancelService OrderCancelService) *OrderService {
 	return &OrderService{
 		oRepo:              oRepo,
@@ -24,6 +26,7 @@ func NewOrderService(oRepo repository.OrderRepository, cRedisRepo commodityRepos
 	}
 }
 
+// CreateOrder 创建订单，先扣减Redis库存，成功后创建订单并加入延迟取消队列
 func (os *OrderService) CreateOrder(userId int, commodityId int, quantity int, totalPrice string, address string) error {
 	order := &model.Order{UserId: userId, CommodityId: commodityId, Quantity: quantity, TotalPrice: totalPrice, Status: "pending", Address: address, CreatedAt: time.Now(), UpdatedAt: time.Now()}
 	code, err := os.cRedisRepo.DecreaseStock(context.TODO(), commodityId, quantity)
@@ -51,24 +54,29 @@ func (os *OrderService) CreateOrder(userId int, commodityId int, quantity int, t
 	return nil
 }
 
+// UpdateOrderStatus 更新订单状态
 func (os *OrderService) UpdateOrderStatus(id int, status string) error {
 	order := &model.Order{Status: status, Id: id}
 	return os.oRepo.UpdateOrder(order)
 }
 
+// UpdateOrderAddress 更新订单地址
 func (os *OrderService) UpdateOrderAddress(id int, address string) error {
 	order := &model.Order{Address: address, Id: id}
 	return os.oRepo.UpdateOrder(order)
 }
 
+// DeleteOrder 删除订单
 func (os *OrderService) DeleteOrder(orderId int) error {
 	return os.oRepo.DeleteOrder(orderId)
 }
 
+// GetOrderById 根据订单ID获取订单
 func (os *OrderService) GetOrderById(orderId int) (*model.Order, error) {
 	return os.oRepo.FindOrderById(orderId)
 }
 
+// GetOrdersByUserId 根据用户ID获取该用户的所有订单
 func (os *OrderService) GetOrdersByUserId(userId int) ([]*model.Order, error) {
 	return os.oRepo.FindOrdersByUserId(userId)
 }

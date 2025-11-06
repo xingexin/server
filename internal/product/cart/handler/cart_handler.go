@@ -11,15 +11,18 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// CartHandler 处理购物车相关的HTTP请求
 type CartHandler struct {
 	cartService *service.CartService
 	userService *userService.UserService
 }
 
+// NewCartHandler 创建一个新的购物车处理器实例
 func NewCartHandler(cartService *service.CartService, uService *userService.UserService) *CartHandler {
 	return &CartHandler{cartService: cartService, userService: uService}
 }
 
+// AddToCart 处理添加商品到购物车请求
 func (h *CartHandler) AddToCart(c *gin.Context) {
 	// 从JWT获取认证后的userID
 	userID, exists := c.Get("userID")
@@ -44,6 +47,7 @@ func (h *CartHandler) AddToCart(c *gin.Context) {
 	log.Info("user", uid, "add to cart success")
 }
 
+// RemoveFromCart 处理从购物车移除商品请求
 func (h *CartHandler) RemoveFromCart(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -61,6 +65,7 @@ func (h *CartHandler) RemoveFromCart(c *gin.Context) {
 	return
 }
 
+// UpdateCart 处理更新购物车商品数量请求
 func (h *CartHandler) UpdateCart(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -85,6 +90,7 @@ func (h *CartHandler) UpdateCart(c *gin.Context) {
 	return
 }
 
+// GetCart 处理获取购物车请求
 func (h *CartHandler) GetCart(c *gin.Context) {
 	// 从JWT获取认证后的userID
 	userID, exists := c.Get("userID")

@@ -14,9 +14,10 @@ import (
 	"server/internal/product/order/repository"
 )
 
+// OrderCancelService 订单取消服务接口，负责超时订单的自动取消和库存归还
 type OrderCancelService interface {
-	createOrderTask(orderId int, commodityId int, stock int) error
-	RemoveTimeoutOrderTasks() error
+	createOrderTask(orderId int, commodityId int, stock int) error // 创建订单取消任务（15分钟后执行）
+	RemoveTimeoutOrderTasks() error                                // 处理超时订单，归还库存
 }
 
 type cancelService struct {
@@ -26,6 +27,7 @@ type cancelService struct {
 	rDB         *redis.Client
 }
 
+// NewOrderCancelService 创建一个新的订单取消服务实例
 func NewOrderCancelService(redisDQRepo repository.OrderDQRepository, oRepo repository.OrderRepository, cRedisRepo commodityRepository.StockCacheRepository, rDB *redis.Client) OrderCancelService {
 	return &cancelService{
 		redisDQRepo: redisDQRepo,
@@ -35,6 +37,7 @@ func NewOrderCancelService(redisDQRepo repository.OrderDQRepository, oRepo repos
 	}
 }
 
+// createOrderTask 创建订单超时取消任务，15分钟后自动取消未支付订单
 func (s *cancelService) createOrderTask(orderId int, commodityId int, stock int) error {
 	// 将 commodityId 和 stock 用逗号分隔存储，格式: "commodityId,stock"
 	payload := strconv.Itoa(commodityId) + "," + strconv.Itoa(stock)
@@ -45,6 +48,7 @@ func (s *cancelService) createOrderTask(orderId int, commodityId int, stock int)
 	return nil
 }
 
+// RemoveTimeoutOrderTasks 扫描并处理超时订单，自动归还库存到Redis
 func (s *cancelService) RemoveTimeoutOrderTasks() error {
 	ids, err := s.redisDQRepo.GetReadyTasks(context.TODO(), 100)
 

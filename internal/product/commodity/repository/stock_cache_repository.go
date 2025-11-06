@@ -12,20 +12,22 @@ import (
 	"gorm.io/gorm"
 )
 
+// getStockCacheKey 生成库存缓存的Redis key
 func getStockCacheKey(commodityId int) string {
 	return "stock_key_" + strconv.Itoa(commodityId)
 }
+// getDeltaCacheKey 生成库存增量的Redis key
 func getDeltaCacheKey(commodityId int) string {
 	return "delta_key_" + strconv.Itoa(commodityId)
 }
 
 type StockCacheRepository interface {
-	InitStockCache(ctx context.Context, commodityId int, stock int) error
-	DecreaseStock(ctx context.Context, commodityId int, quantity int) (int, error)
-	IncreaseStock(ctx context.Context, commodityId int, quantity int) error
-	SyncStock(ctx context.Context, commodityId int) error
-	GetAllDeltaKey(ctx context.Context) ([]string, error)
-	GetDeltaValue(ctx context.Context, key string) (int, error)
+	InitStockCache(ctx context.Context, commodityId int, stock int) error           // 初始化商品库存缓存
+	DecreaseStock(ctx context.Context, commodityId int, quantity int) (int, error) // 扣减库存（原子操作）
+	IncreaseStock(ctx context.Context, commodityId int, quantity int) error        // 增加库存（用于归还）
+	SyncStock(ctx context.Context, commodityId int) error                          // 同步库存增量到数据库
+	GetAllDeltaKey(ctx context.Context) ([]string, error)                          // 获取所有有变化的库存key
+	GetDeltaValue(ctx context.Context, key string) (int, error)                    // 获取库存增量值
 }
 
 type redisCommodityRepository struct {
@@ -33,10 +35,12 @@ type redisCommodityRepository struct {
 	cRepo      *gorm.DB
 }
 
+// NewRedisCommodityRepository 创建一个新的Redis库存缓存仓储实例
 func NewRedisCommodityRepository(cRedisRepo *redis.Client, cRepo *gorm.DB) StockCacheRepository {
 	return &redisCommodityRepository{cRedisRepo: cRedisRepo, cRepo: cRepo}
 }
 
+// InitStockCache 初始化商品库存缓存到Redis
 func (rRepo *redisCommodityRepository) InitStockCache(ctx context.Context, commodityId int, stock int) error {
 	if err := rRepo.cRedisRepo.Set(ctx, getStockCacheKey(commodityId), stock, time.Hour*24).Err(); err != nil {
 		log.Error("Failed to initialize stock cache:", err)
@@ -46,6 +50,7 @@ func (rRepo *redisCommodityRepository) InitStockCache(ctx context.Context, commo
 	return nil
 }
 
+// DecreaseStock 使用Lua脚本原子性地扣减库存，防止超卖
 func (rRepo *redisCommodityRepository) DecreaseStock(ctx context.Context, commodityId int, quantity int) (int, error) {
 	if rRepo == nil || rRepo.cRedisRepo == nil {
 		panic("redis repository is nil")
@@ -92,6 +97,7 @@ func (rRepo *redisCommodityRepository) DecreaseStock(ctx context.Context, commod
 	return 0, nil
 }
 
+// IncreaseStock 使用Lua脚本原子性地增加库存（用于订单取消）
 func (rRepo *redisCommodityRepository) IncreaseStock(ctx context.Context, commodityId int, quantity int) error {
 	if quantity <= 0 {
 		log.Warning("Invalid quantity:", quantity)
@@ -126,6 +132,7 @@ func (rRepo *redisCommodityRepository) IncreaseStock(ctx context.Context, commod
 	return nil
 }
 
+// SyncStock 将Redis中的库存增量同步到MySQL数据库
 func (rRepo *redisCommodityRepository) SyncStock(ctx context.Context, commodityId int) error {
 	deltaKey := getDeltaCacheKey(commodityId)
 	luaScript := `
@@ -167,6 +174,7 @@ func (rRepo *redisCommodityRepository) SyncStock(ctx context.Context, commodityI
 	return nil
 }
 
+// GetAllDeltaKey 扫描并获取所有库存增量的key
 func (rRepo *redisCommodityRepository) GetAllDeltaKey(ctx context.Context) ([]string, error) {
 	res := make([]string, 0)
 	iter := rRepo.cRedisRepo.Scan(ctx, 0, "delta_key_*", 100).Iterator() //分100条每页
@@ -180,6 +188,7 @@ func (rRepo *redisCommodityRepository) GetAllDeltaKey(ctx context.Context) ([]st
 	return res, nil
 }
 
+// GetDeltaValue 获取指定key的库存增量值
 func (rRepo *redisCommodityRepository) GetDeltaValue(ctx context.Context, key string) (int, error) {
 	res, err := rRepo.cRedisRepo.Get(ctx, key).Result()
 	if err != nil {

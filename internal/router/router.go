@@ -10,8 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// secret JWT签名密钥
 var secret = []byte("gee")
 
+// RegisterRoutes 注册所有API路由
 func RegisterRoutes(r *gin.Engine, uHandler *userHandler.UserHandler, cHandler *commodityHandler.CommodityHandler, caHandler *cartHandler.CartHandler, oHandler *orderHandler.OrderHandler) {
 	v1 := r.Group("/v1")
 	v1.POST("/login", uHandler.Login)

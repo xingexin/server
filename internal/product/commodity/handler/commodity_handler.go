@@ -11,14 +11,17 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// CommodityHandler 处理商品相关的HTTP请求
 type CommodityHandler struct {
 	cSvc *service.CommodityService
 }
 
+// NewCommodityHandler 创建一个新的商品处理器实例
 func NewCommodityHandler(cSvc *service.CommodityService) *CommodityHandler {
 	return &CommodityHandler{cSvc: cSvc}
 }
 
+// CreateCommodity 处理创建商品请求
 func (h *CommodityHandler) CreateCommodity(c *gin.Context) {
 	var req dto.CreateCommodityRequest
 	err := c.ShouldBindJSON(&req)
@@ -41,6 +44,7 @@ func (h *CommodityHandler) CreateCommodity(c *gin.Context) {
 	return
 }
 
+// ListCommodity 处理获取商品列表请求
 func (h *CommodityHandler) ListCommodity(c *gin.Context) {
 	commodities, err := h.cSvc.ListCommodity()
 	if err != nil {
@@ -61,6 +65,7 @@ func (h *CommodityHandler) ListCommodity(c *gin.Context) {
 	return
 }
 
+// UpdateCommodity 处理更新商品请求
 func (h *CommodityHandler) UpdateCommodity(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -91,6 +96,7 @@ func (h *CommodityHandler) UpdateCommodity(c *gin.Context) {
 	return
 }
 
+// DeleteCommodity 处理删除商品请求
 func (h *CommodityHandler) DeleteCommodity(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -108,6 +114,7 @@ func (h *CommodityHandler) DeleteCommodity(c *gin.Context) {
 	return
 }
 
+// FindCommodityByName 处理根据名称查找商品请求
 func (h *CommodityHandler) FindCommodityByName(c *gin.Context) {
 	name := c.Query("name")
 	if name == "" {

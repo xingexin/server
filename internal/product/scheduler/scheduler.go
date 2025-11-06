@@ -8,11 +8,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Scheduler 库存同步调度器，定时将Redis库存变化同步到MySQL
 type Scheduler struct {
 	cStockSvc *service.StockCacheService
 	stopChan  chan struct{}
 }
 
+// NewScheduler 创建一个新的库存同步调度器实例
 func NewScheduler(cStockSvc *service.StockCacheService) *Scheduler {
 	return &Scheduler{
 		cStockSvc: cStockSvc,
@@ -20,6 +22,7 @@ func NewScheduler(cStockSvc *service.StockCacheService) *Scheduler {
 	}
 }
 
+// Start 启动调度器，每10秒同步一次库存
 func (s *Scheduler) Start() error {
 	ticker := time.NewTicker(time.Second * 10)
 	defer ticker.Stop()
@@ -41,6 +44,7 @@ func (s *Scheduler) Start() error {
 	}
 }
 
+// Stop 停止调度器
 func (s *Scheduler) Stop() {
 	close(s.stopChan)
 }

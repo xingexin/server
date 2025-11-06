@@ -6,14 +6,17 @@ import (
 	"time"
 )
 
+// CartService 提供购物车相关的业务逻辑服务
 type CartService struct {
 	cartRepo repository.CartRepository
 }
 
+// NewCartService 创建一个新的购物车服务实例
 func NewCartService(repo repository.CartRepository) *CartService {
 	return &CartService{cartRepo: repo}
 }
 
+// AddToCart 添加商品到购物车
 func (cs *CartService) AddToCart(userId int, commodityId int, quantity int) error {
 
 	cart := &model.Cart{
@@ -26,10 +29,12 @@ func (cs *CartService) AddToCart(userId int, commodityId int, quantity int) erro
 	return cs.cartRepo.CreateCart(cart)
 }
 
+// RemoveFromCart 从购物车中移除商品
 func (cs *CartService) RemoveFromCart(cartId int) error {
 	return cs.cartRepo.DeleteCart(cartId)
 }
 
+// UpdateCart 更新购物车中商品的数量
 func (cs *CartService) UpdateCart(cartId int, quantity int) error {
 	cart, err := cs.cartRepo.FindCartById(cartId)
 	if err != nil {
@@ -40,6 +45,7 @@ func (cs *CartService) UpdateCart(cartId int, quantity int) error {
 	return cs.cartRepo.UpdateCart(cart)
 }
 
+// GetCart 获取用户的购物车
 func (cs *CartService) GetCart(userId int) ([]*model.Cart, error) {
 	return cs.cartRepo.FindCartByUserId(userId)
 }

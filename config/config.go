@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Config 应用配置结构
 type Config struct {
 	Server struct {
 		Port int
@@ -23,6 +24,7 @@ type Config struct {
 	}
 }
 
+// LoadConfig 从 config.yaml 加载配置文件
 func LoadConfig() (*Config, error) {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")

@@ -18,9 +18,10 @@ var (
 	colorGray   = "\033[37m"
 )
 
-// CustomFormatter 实现 logrus.Formatter 接口
+// CustomFormatter 实现 logrus.Formatter 接口，自定义日志格式和颜色
 type CustomFormatter struct{}
 
+// Format 格式化日志条目，添加颜色和时间戳
 func (f *CustomFormatter) Format(entry *log.Entry) ([]byte, error) {
 	// 时间格式：1999.9.9 8:10
 	timestamp := entry.Time.Format(" 2006.1.2 15:04:05")

@@ -2,6 +2,7 @@ package model
 
 import "time"
 
+// Commodity 商品模型
 type Commodity struct {
 	ID        int     `gorm:"primaryKey" json:"id"`
 	Name      string  `json:"name"`

@@ -47,6 +47,7 @@ func (c *CommodityService) FindCommodityById(id int) (*model.Commodity, error) {
 	return c.cRepo.FindCommodityById(id)
 }
 
+// FindCommodityByName 根据名称查找商品
 func (c *CommodityService) FindCommodityByName(name string) ([]*model.Commodity, error) {
 	return c.cRepo.FindCommodityByName(name)
 

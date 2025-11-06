@@ -10,14 +10,17 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// OrderHandler 处理订单相关的HTTP请求
 type OrderHandler struct {
 	oSvc *service.OrderService
 }
 
+// NewOrderHandler 创建一个新的订单处理器实例
 func NewOrderHandler(oSvc *service.OrderService) *OrderHandler {
 	return &OrderHandler{oSvc: oSvc}
 }
 
+// CreateOrder 处理创建订单请求
 func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	// 从JWT获取认证后的userID
 	userID, exists := c.Get("userID")
@@ -42,6 +45,7 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	log.Info("order create success, userID:", uid, "commodityID:", req.CommodityId)
 }
 
+// UpdateOrderStatus 处理更新订单请求（状态或地址）
 func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -75,6 +79,7 @@ func (h *OrderHandler) UpdateOrderStatus(c *gin.Context) {
 	return
 }
 
+// DeleteOrder 处理删除订单请求
 func (h *OrderHandler) DeleteOrder(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -92,6 +97,7 @@ func (h *OrderHandler) DeleteOrder(c *gin.Context) {
 	return
 }
 
+// GetOrder 处理获取订单详情请求
 func (h *OrderHandler) GetOrder(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)

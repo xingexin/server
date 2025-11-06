@@ -9,14 +9,17 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// StockCacheService 提供库存缓存相关的业务逻辑服务
 type StockCacheService struct {
 	cRedisSvc repository.StockCacheRepository
 }
 
+// NewStockCacheService 创建一个新的库存缓存服务实例
 func NewStockCacheService(cRedisSvc repository.StockCacheRepository) *StockCacheService {
 	return &StockCacheService{cRedisSvc: cRedisSvc}
 }
 
+// SyncAllStock 同步所有有变化的库存到数据库
 func (s *StockCacheService) SyncAllStock(ctx context.Context) error {
 	keys, err := s.cRedisSvc.GetAllDeltaKey(ctx)
 	if err != nil {

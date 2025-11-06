@@ -2,7 +2,8 @@ package model
 
 import "time"
 
-type Order struct {
+// Order 订单模型
+type Order struct{
 	Id          int `gorm:"primary_key"`
 	UserId      int
 	CommodityId int

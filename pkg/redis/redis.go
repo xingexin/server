@@ -9,6 +9,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// InitRedis 初始化 Redis 连接池
 func InitRedis(cfg *config.Config) (*redis.Client, error) {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     cfg.Redis.Addr,
@@ -25,6 +26,7 @@ func InitRedis(cfg *config.Config) (*redis.Client, error) {
 	return rdb, nil
 }
 
+// EnqueueDelayTask 将延迟任务加入 Redis 延迟队列（使用 ZSet 实现）
 func EnqueueDelayTask(ctx context.Context, rdb *redis.Client, id, payload string, time int64) error {
 	pipe := rdb.TxPipeline()
 	pipe.ZAdd(ctx, "dq:ready", redis.Z{Score: float64(time), Member: id})
@@ -37,6 +39,7 @@ func EnqueueDelayTask(ctx context.Context, rdb *redis.Client, id, payload string
 	return nil
 }
 
+// Ack 确认并删除延迟队列中的任务
 func Ack(ctx context.Context, rdb *redis.Client, id string) error {
 	pipe := rdb.TxPipeline()
 	pipe.ZRem(ctx, "dq:ready", id)

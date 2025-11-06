@@ -9,6 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// InitDB 初始化数据库连接，支持 MySQL 和 PostgreSQL
 func InitDB(cfg *config.Config) (*gorm.DB, error) {
 	var diaLector gorm.Dialector
 	switch cfg.DataBase.Driver {

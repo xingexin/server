@@ -68,6 +68,7 @@ func (cRepo *gormCommodityRepository) FindCommodityById(id int) (*model.Commodit
 	return &commodity, err
 }
 
+// FindCommodityByName 根据名称从数据库中查找商品
 func (cRepo *gormCommodityRepository) FindCommodityByName(name string) ([]*model.Commodity, error) {
 	var commodities []*model.Commodity
 	err := cRepo.gormDB.Where("name=?", name).Find(&commodities).Error
