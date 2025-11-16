@@ -1,7 +1,7 @@
 # 项目结构
 
 - 仓库：server
-- 生成时间：2025-11-16 08:58:14 UTC
+- 生成时间：2025-11-16 09:01:54 UTC
 - 深度：99
 - 忽略：.git|target|node_modules|.idea|.vscode|dist|build
 
@@ -65,6 +65,7 @@
 │   │   │       └── order_service.go
 │   │   ├── scheduler/
 │   │   │   ├── order_dq_scheduler.go
+│   │   │   ├── recovery_scheduler.go
 │   │   │   └── scheduler.go
 │   │   └── user/
 │   │       ├── dto/
@@ -94,7 +95,7 @@
         ├── code.go
         └── response.go
 
-39 directories, 48 files
+39 directories, 49 files
 ```
 
 > 本文件由 GitHub Actions 自动生成，请勿手动编辑。
