@@ -26,10 +26,11 @@ import (
 // main 主函数，应用程序入口
 // 应用架构：
 // 1. 使用dig进行依赖注入管理
-// 2. 三个goroutine并发运行：
+// 2. 四个goroutine并发运行：
 //    - HTTP服务器（处理API请求）
 //    - 库存同步调度器（每10秒同步Redis库存到MySQL）
 //    - 订单延迟队列调度器（每10秒处理超时订单）
+//    - 超时任务恢复调度器（每60秒恢复processing队列中的超时任务）
 // 3. 支持优雅关闭（监听SIGINT和SIGTERM信号）
 func main() {
 	// 创建dig容器，集中管理所有依赖的生命周期
@@ -49,6 +50,7 @@ func main() {
 		oHandler *orderHandler.OrderHandler,       // 订单Handler
 		stockScheduler *scheduler.Scheduler,       // 库存同步调度器
 		orderDQScheduler *scheduler.OrderDQScheduler, // 订单延迟队列调度器
+		recoveryScheduler *scheduler.RecoveryScheduler, // 超时任务恢复调度器
 	) error {
 		// 1. 初始化日志系统（根据配置文件设置日志级别）
 		logger.InitLogger(cfg.Logger.Level)
@@ -91,7 +93,17 @@ func main() {
 			}
 		}()
 
-		// 7. 设置系统信号监听（用于优雅关闭）
+		// 7. 启动超时任务恢复调度器（在独立goroutine中运行）
+		// 作用：每60秒扫描processing队列，将超时任务（处理超过5分钟）移回ready队列重试
+		// 场景：调度器崩溃、处理失败、网络超时等导致任务卡在processing队列
+		go func() {
+			log.Info("Starting Recovery Scheduler...")
+			if err := recoveryScheduler.Start(); err != nil {
+				log.Error("Recovery Scheduler error:", err)
+			}
+		}()
+
+		// 8. 设置系统信号监听（用于优雅关闭）
 		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM) // 监听Ctrl+C和kill信号
 
@@ -109,6 +121,7 @@ func main() {
 
 		// 10. 优雅关闭：停止调度器
 		stockScheduler.Stop()
+		recoveryScheduler.Stop()
 		// TODO: 也应该停止orderDQScheduler（需要添加Stop方法）
 
 		log.Info("Server stopped")

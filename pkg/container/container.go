@@ -95,6 +95,9 @@ func BuildContainer() *dig.Container {
 	if err := container.Provide(scheduler.NewScheduler); err != nil {
 		log.Fatalf("Failed to provide Scheduler: %v", err)
 	}
+	if err := container.Provide(scheduler.NewRecoveryScheduler); err != nil {
+		log.Fatalf("Failed to provide RecoveryScheduler: %v", err)
+	}
 
 	// 提供 Handlers
 	if err := container.Provide(userHandler.NewUserHandler); err != nil {

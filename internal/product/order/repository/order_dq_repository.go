@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"fmt"
+
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -33,34 +33,26 @@ func (oRedisRepo *redisOrderDQRepository) EnqueueDelayTask(ctx context.Context, 
 	return myRedis.EnqueueDelayTask(ctx, oRedisRepo.redisDB, id, payload, unixTime)
 }
 
-// GetReadyTasks 获取到期的延迟任务（已超时的订单）
+// GetReadyTasks 获取到期的延迟任务（已超时的订单）并原子性移动到processing队列
+// 使用三队列模型防止任务重复处理：
+// 1. 原子性从ready队列获取到期任务
+// 2. 立即移动到processing队列（防止其他调度器重复获取）
+// 3. 处理超时设置为300秒，超时后任务会被RecoveryScheduler恢复
 func (oRedisRepo *redisOrderDQRepository) GetReadyTasks(ctx context.Context, count int64) ([]string, error) {
-	head, err := oRedisRepo.redisDB.ZRangeWithScores(ctx, "dq:ready", 0, 0).Result()
-
+	// 使用GetAndMoveToProcessing原子性获取任务并移动到processing队列
+	// 处理超时设置为300秒（5分钟），超时后任务会被RecoveryScheduler恢复到ready队列
+	ids, err := myRedis.GetAndMoveToProcessing(ctx, oRedisRepo.redisDB, count, 300)
 	if err != nil {
-		log.Warn("Failed to get ready tasks: %v", err)
+		log.Warn("Failed to get and move tasks: %v", err)
 		return nil, ErrQueueOperationFailed
 	}
-	if len(head) == 0 {
+
+	// 如果没有到期任务，返回特定错误
+	if len(ids) == 0 {
 		log.Debug("No ready tasks found")
 		return nil, ErrNoTasksInQueue
 	}
-	dueTime := int64(head[0].Score)
-	redisNow := oRedisRepo.redisDB.Time(ctx).Val().Unix()
-	if dueTime > redisNow {
-		log.Debug("No tasks are due yet")
-		return nil, ErrNoTasksDue
-	}
-	ids, err := oRedisRepo.redisDB.ZRangeByScore(ctx, "dq:ready", &redis.ZRangeBy{
-		Min:    "-inf",
-		Max:    fmt.Sprintf("%d", redisNow),
-		Offset: 0,
-		Count:  count,
-	}).Result()
-	if err != nil {
-		log.Warn("Failed to get ready tasks by score: %v", err)
-		return nil, ErrQueueOperationFailed
-	}
+
 	return ids, nil
 }
 

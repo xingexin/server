@@ -138,13 +138,12 @@ func (s *cancelService) RemoveTimeoutOrderTasks() error {
 			log.Warnf("invalid payload format for order %d: %s", orderId, payload)
 			continue
 		}
-
+		// 将payload解析成commodityId和stock
 		commodityId, err := strconv.Atoi(parts[0])
 		if err != nil {
 			log.Warnf("invalid commodityId in payload: %s", parts[0])
 			continue
 		}
-
 		stock, err := strconv.Atoi(parts[1])
 		if err != nil {
 			log.Warnf("invalid stock in payload: %s", parts[1])
