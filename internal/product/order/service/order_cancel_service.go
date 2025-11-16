@@ -71,10 +71,11 @@ func (s *cancelService) createOrderTask(orderId int, commodityId int, stock int)
 // 业务流程：
 //  1. 从延迟队列中获取到期的任务（最多100个）
 //  2. 遍历每个到期任务：
-//     a. 解析任务ID（订单ID）
-//     b. 从Redis获取payload（包含商品ID和库存数量）
-//     c. 调用IncreaseStock归还库存到Redis
-//     d. 从延迟队列中移除任务
+//     a. 设置幂等性键（防止重复处理）
+//     b. 解析任务ID（订单ID）
+//     c. 从Redis获取payload（包含商品ID和库存数量）
+//     d. 调用IncreaseStock归还库存到Redis
+//     e. 从延迟队列中移除任务
 //  3. 记录处理日志
 //
 // 错误处理：
@@ -82,12 +83,11 @@ func (s *cancelService) createOrderTask(orderId int, commodityId int, stock int)
 // - ErrNoTasksInQueue: 队列为空，等待1秒后返回
 // - ErrQueueOperationFailed: 队列操作失败，等待200ms后返回错误
 //
-// ⚠️ 已知问题（需修复）：
-// 1. 归还库存和移除任务不是原子操作
-// 2. 如果归还成功但移除失败，下次会重复归还库存
-// 3. 如果归还失败，任务还在队列中，下次会重试（可能正确）
-//
-// 建议使用Lua脚本保证原子性，或使用事务消息模式
+// 幂等性保护：
+// - 使用Redis SetNX设置幂等性键（格式：order_cancel_idempotent:{orderId}）
+// - 如果幂等性键已存在，说明订单已处理过，只删除任务不归还库存
+// - 幂等性键24小时后自动过期
+// - 解决了"归还库存成功但删除任务失败"导致的重复归还问题
 func (s *cancelService) RemoveTimeoutOrderTasks() error {
 	// 从延迟队列获取到期任务（最多100个）
 	ids, err := s.redisDQRepo.GetReadyTasks(context.TODO(), 100)
@@ -125,46 +125,89 @@ func (s *cancelService) RemoveTimeoutOrderTasks() error {
 			continue // 跳过无效ID，继续处理下一个
 		}
 
-		// 从Redis获取payload（格式："commodityId,stock"）
-		payload, err := s.rDB.Get(context.TODO(), "dq:payload:"+id).Result()
+		// 幂等性保护：尝试设置幂等性键
+		// 格式：order_cancel_idempotent:{orderId}
+		// SetNX：只在键不存在时设置，返回true表示设置成功（首次处理）
+		idempotentKey := "order_cancel_idempotent:" + id
+		ctx := context.TODO()
+		success, err := s.rDB.SetNX(ctx, idempotentKey, "1", time.Hour*24).Result()
 		if err != nil {
-			log.Warn("fail to get order payload:", err)
-			continue // payload不存在，跳过此任务
+			log.Errorf("Failed to set idempotent key for order %d: %v", orderId, err)
+			continue // Redis错误，跳过此任务，下次重试
+		}
+
+		if !success {
+			// 幂等性键已存在，说明这个订单已经处理过了
+			log.Warnf("Order %d already cancelled (idempotent key exists), only removing task", orderId)
+
+			// 只删除任务，不归还库存（因为库存已经归还过了）
+			err = s.redisDQRepo.RemoveTask(ctx, id)
+			if err != nil {
+				log.Errorf("Failed to remove duplicate task %s: %v", id, err)
+				// 不return，继续处理下一个任务
+			} else {
+				log.Infof("Successfully removed duplicate task for order %d", orderId)
+			}
+			continue
+		}
+
+		// 从Redis获取payload（格式："commodityId,stock"）
+		payload, err := s.rDB.Get(ctx, "dq:payload:"+id).Result()
+		if err != nil {
+			log.Warnf("Failed to get payload for order %d: %v", orderId, err)
+			// payload不存在，删除幂等性键，下次重试
+			s.rDB.Del(ctx, idempotentKey)
+			continue
 		}
 
 		// 解析payload，提取商品ID和库存数量
 		parts := strings.Split(payload, ",")
 		if len(parts) != 2 {
-			log.Warnf("invalid payload format for order %d: %s", orderId, payload)
+			log.Warnf("Invalid payload format for order %d: %s", orderId, payload)
+			// payload格式错误，删除幂等性键和任务
+			s.rDB.Del(ctx, idempotentKey)
+			_ = s.redisDQRepo.RemoveTask(ctx, id)
 			continue
 		}
+
 		// 将payload解析成commodityId和stock
 		commodityId, err := strconv.Atoi(parts[0])
 		if err != nil {
-			log.Warnf("invalid commodityId in payload: %s", parts[0])
+			log.Warnf("Invalid commodityId in payload: %s", parts[0])
+			s.rDB.Del(ctx, idempotentKey)
+			_ = s.redisDQRepo.RemoveTask(ctx, id)
 			continue
 		}
 		stock, err := strconv.Atoi(parts[1])
 		if err != nil {
-			log.Warnf("invalid stock in payload: %s", parts[1])
+			log.Warnf("Invalid stock in payload: %s", parts[1])
+			s.rDB.Del(ctx, idempotentKey)
+			_ = s.redisDQRepo.RemoveTask(ctx, id)
 			continue
 		}
 
 		// 归还库存到Redis（使用Lua脚本保证原子性）
-		err = s.cRedisRepo.IncreaseStock(context.TODO(), commodityId, stock)
+		err = s.cRedisRepo.IncreaseStock(ctx, commodityId, stock)
 		if err != nil {
 			log.Errorf("Failed to increase stock for order %d: %v", orderId, err)
-			return err // ⚠️ 归还失败，返回错误，任务保留在队列中下次重试
+			// 归还失败，删除幂等性键，任务保留在队列中，下次重试
+			s.rDB.Del(ctx, idempotentKey)
+			return err
 		}
 
+		//  库存归还成功，幂等性键保留
 		// 从延迟队列中移除任务
-		err = s.redisDQRepo.RemoveTask(context.TODO(), id)
+		err = s.redisDQRepo.RemoveTask(ctx, id)
 		if err != nil {
-			log.Errorf("Failed to remove task %s: %v", id, err)
-			return err // ⚠️ 移除失败，返回错误，但库存已归还（下次会重复归还！）
+			// ⚠️ 任务删除失败，但库存已归还
+			// 由于幂等性键已存在，下次处理时会检测到并跳过库存归还，只删除任务
+			// 不会重复归还库存！
+			log.Errorf("Failed to remove task %s (stock already restored, safe to retry): %v", id, err)
+			// 不return，继续处理下一个任务
+			continue
 		}
 
-		log.Infof("Successfully cancelled expired order %d and restored stock %d", orderId, stock)
+		log.Infof("Successfully cancelled expired order %d and restored stock %d for commodity %d", orderId, stock, commodityId)
 	}
 	return nil
 }
